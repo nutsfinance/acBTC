@@ -10,6 +10,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  */
 contract BasketToken is ERC20 {
 
+    /**
+     * @dev Address of the BasketCore contract. The BasketCore contract is upgradeable so the value of
+     * this field does not need to be updated.
+     * @dev The BasketToken contract must be deployed after the BasketCore contract is deployed.
+     */
     address private _basketCoreAddress;
 
     /**
