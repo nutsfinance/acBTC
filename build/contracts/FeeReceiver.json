@@ -716,7 +716,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.23",
-  "updatedAt": "2020-08-23T08:51:50.738Z",
+  "updatedAt": "2020-08-23T23:31:08.844Z",
   "devdoc": {
     "methods": {
       "onFeeReceived(address,uint256)": {

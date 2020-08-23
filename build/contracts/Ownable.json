@@ -3006,7 +3006,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.23",
-  "updatedAt": "2020-08-23T08:51:50.735Z",
+  "updatedAt": "2020-08-23T23:31:08.841Z",
   "devdoc": {
     "details": "Ownable contract inspired by OpenZeppelin's Ownable contract. https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol It's modified to work with initializer.",
     "methods": {

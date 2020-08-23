@@ -1222,7 +1222,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.23",
-  "updatedAt": "2020-08-23T08:51:50.737Z",
+  "updatedAt": "2020-08-23T23:31:08.843Z",
   "devdoc": {
     "details": "ReentrancyGuard contract inspired by OpenZeppelin's ReentrancyGuard contract. https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/ReentrancyGuard.sol It's modified to work with initializer.",
     "methods": {}
