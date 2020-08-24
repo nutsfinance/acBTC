@@ -23,7 +23,7 @@ pragma solidity 0.6.8;
 
     uint256 private _status;
 
-    function initialize() public virtual {
+    function _initialize() internal virtual {
         require(_status == 0, "ReentrancyGuard: already initialized");
         _status = _NOT_ENTERED;
     }

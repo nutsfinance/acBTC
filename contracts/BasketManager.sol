@@ -37,9 +37,16 @@ contract BasketManager is Ownable, ReentrancyGuard {
     /**
      * @dev Initializes the contract in the proxy.
      */
-    function initialize() public override(Ownable, ReentrancyGuard) {
-        Ownable.initialize();
-        ReentrancyGuard.initialize();
+    function initialize(address basketCoreAddress) public {
+        require(basketCoreAddress != address(0x0), "BasketManager: Basket core address not set.");
+
+        _initialize();
+        _basketCore = BasketCore(basketCoreAddress);
+    }
+
+    function _initialize() internal override(Ownable, ReentrancyGuard) {
+        Ownable._initialize();
+        ReentrancyGuard._initialize();
     }
 
     /**
