@@ -42,12 +42,14 @@ contract BasketCore is Ownable {
     /**
      * @dev Initializes the BasketCore contract in proxy.
      */
-    function initialize(address basketManagerAddress, address feeReceiverAddress) public {
+    function initialize(address basketManagerAddress, address feeReceiverAddress, address basketTokenAddress) public {
         require(basketManagerAddress != address(0x0), "Basket manager not set");
         require(feeReceiverAddress != address(0x0), "Fee receiver not set");
+        require(basketTokenAddress != address(0x0), "Basket token not set");
         Ownable._initialize();
         _basketManagerAddress = basketManagerAddress;
         _feeReceiverAddress = feeReceiverAddress;
+        _basketToken = BasketToken(basketTokenAddress);
     }
 
     /**

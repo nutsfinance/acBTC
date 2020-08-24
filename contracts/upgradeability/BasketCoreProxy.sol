@@ -4,10 +4,10 @@ pragma solidity 0.6.8;
 import "./AdminUpgradeabilityProxy.sol";
 
 /**
- * @notice Proxy for BasketManager.
- * @dev We define separate proxy contracts for BasketManager and BasketCore to help truffle deployment.
+ * @notice Proxy for BasketCore.
+ * @dev We define separate proxy contracts for BasketCore and BasketCore to help truffle deployment.
  */
-contract BasketManagerProxy is AdminUpgradeabilityProxy {
+contract BasketCoreProxy is AdminUpgradeabilityProxy {
 
     constructor(address _logic, address _admin) AdminUpgradeabilityProxy(_logic, _admin) public payable {}
 }
