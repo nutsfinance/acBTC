@@ -200,8 +200,8 @@ contract BasketCore is Ownable {
     /**
      * @dev Returns the current balance of the underlying asset.
      */
-    function getTokenBalance(address tokenBalance) public view returns (uint256) {
-        return _tokenBalances[tokenBalance];
+    function getTokenBalance(address tokenAddress) public view returns (uint256) {
+        return _tokenBalances[tokenAddress];
     }
 
     /**

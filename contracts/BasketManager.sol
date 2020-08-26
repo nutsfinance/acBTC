@@ -13,26 +13,26 @@ contract BasketManager is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
 
     /**
-     * @dev Status of individual underlying asset in the basket.
+     * @dev Status of individual underlying token in the basket.
      */
-    enum AssetStatus {
+    enum TokenStatus {
         Invalid,
-        Normal,             // Can increase asset balance.
-        Paused,             // Can't increase asset balance. Can change back to Normal.
-        Terminated          // Can't increase asset balance. Can't change to other status.
+        Normal,             // Can increase token balance.
+        Paused,             // Can't increase token balance. Can change back to Normal.
+        Terminated          // Can't increase token balance. Can't change to other status.
     }
 
     /**
-     * @dev Data about underlying asset in the basket.
+     * @dev Data about underlying token in the basket.
      */
-    struct Asset {
-        AssetStatus status;
+    struct Token {
+        TokenStatus status;
         uint256 index;
     }
 
     address private _basketCoreAddress;
     address[] private _tokenAddresses;
-    mapping(address => Asset) _tokens;
+    mapping(address => Token) _tokens;
 
     /**
      * @dev Initializes the contract in the proxy.
@@ -52,36 +52,36 @@ contract BasketManager is Ownable, ReentrancyGuard {
     /**
      * @dev Adds a new underlying token to the basket.
      */
-    function addAsset(address tokenAddress) public onlyOwner {
-        require(_tokens[tokenAddress].status == AssetStatus.Invalid, "BasketManager: Asset already exist");
+    function addToken(address tokenAddress) public onlyOwner {
+        require(_tokens[tokenAddress].status == TokenStatus.Invalid, "BasketManager: Token already exist");
         _tokenAddresses.push(tokenAddress);
-        _tokens[tokenAddress].status = AssetStatus.Normal;
+        _tokens[tokenAddress].status = TokenStatus.Normal;
         _tokens[tokenAddress].index = _tokenAddresses.length - 1;
     }
 
     /**
-     * @dev Pause the underlying asset. It's balance cannot increase in the BasketCore.
+     * @dev Pause the underlying token. It's balance cannot increase in the BasketCore.
      */
-    function pauseAsset(address tokenAddress) public onlyOwner {
-        require(_tokens[tokenAddress].status == AssetStatus.Normal, "BasketManager: Invalid asset status");
-        _tokens[tokenAddress].status = AssetStatus.Paused;
+    function pauseToken(address tokenAddress) public onlyOwner {
+        require(_tokens[tokenAddress].status == TokenStatus.Normal, "BasketManager: Invalid token status");
+        _tokens[tokenAddress].status = TokenStatus.Paused;
     }
 
     /**
-     * @dev Unpause the underlying asset. It's balance can increase in the BasketCore.
+     * @dev Unpause the underlying token. It's balance can increase in the BasketCore.
      */
-    function unpauseAsset(address tokenAddress) public onlyOwner {
-        require(_tokens[tokenAddress].status == AssetStatus.Paused, "BasketManager: Invalid asset status");
-        _tokens[tokenAddress].status = AssetStatus.Normal;
+    function unpauseToken(address tokenAddress) public onlyOwner {
+        require(_tokens[tokenAddress].status == TokenStatus.Paused, "BasketManager: Invalid token status");
+        _tokens[tokenAddress].status = TokenStatus.Normal;
     }
 
     /**
-     * @dev Terminates an asset. It's balance can increase in the BasketCore, and it's a final status.
+     * @dev Terminates an token. It's balance can increase in the BasketCore, and it's a final status.
      */
-    function terminateAsset(address tokenAddress) public onlyOwner {
-        require(_tokens[tokenAddress].status == AssetStatus.Normal || _tokens[tokenAddress].status == AssetStatus.Paused,
-            "BasketManager: Invalid asset status");
-        _tokens[tokenAddress].status = AssetStatus.Terminated;
+    function terminateToken(address tokenAddress) public onlyOwner {
+        require(_tokens[tokenAddress].status == TokenStatus.Normal || _tokens[tokenAddress].status == TokenStatus.Paused,
+            "BasketManager: Invalid token status");
+        _tokens[tokenAddress].status = TokenStatus.Terminated;
     }
 
     /**
@@ -92,16 +92,30 @@ contract BasketManager is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @dev Retrives all underlying tokens in the BasketManager.
+     */
+    function getTokens() public view returns (address[] memory) {
+        return _tokenAddresses;
+    }
+
+    /**
+     * @dev Retrieves the status of an underlying token in the basket.
+     */
+    function getTokenStatus(address tokenAddress) public view returns (TokenStatus) {
+        return _tokens[tokenAddress].status;
+    }
+
+    /**
      * @dev Mints new basket token with underlying tokens.
-     * @param tokenAddresses The addresses of the underlying assets deposited.
-     * @param amounts The amounts of underlying assets deposited.
+     * @param tokenAddresses The addresses of the underlying tokens deposited.
+     * @param amounts The amounts of underlying tokens deposited.
      * @return The amount of basket token minted.
      */
     function mint(address[] memory tokenAddresses, uint256[] memory amounts) public nonReentrant returns (uint256) {
         require(tokenAddresses.length == amounts.length, "BasketManager: Token length mismatch");
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
-            // If an asset is paused or terminated, it cannot be used to mint new basket token.
-            require(_tokens[tokenAddresses[i]].status == AssetStatus.Normal, "BasketManager: Invalid asset status");
+            // If an token is paused or terminated, it cannot be used to mint new basket token.
+            require(_tokens[tokenAddresses[i]].status == TokenStatus.Normal, "BasketManager: Invalid token status");
             require(amounts[i] > 0, "BasketManager: Zero deposit amount");
         }
 
@@ -117,14 +131,14 @@ contract BasketManager is Ownable, ReentrancyGuard {
     /**
      * @dev Proportionally redeem the basket token.
      * @param amount The amount of basket token to redeem.
-     * @return tokenAddresses The underlying assets and their amounts withdrawn.
+     * @return tokenAddresses The underlying tokens and their amounts withdrawn.
      */
     function redeem(uint256 amount) public nonReentrant returns (address[] memory tokenAddresses, uint256[] memory amounts) {
         require(amount > 0, "BasketManager: Zero redemption amount");
         uint256 tokenTotalBalance = 0;
         uint256[] memory tokenBalances = new uint256[](_tokenAddresses.length);
         for (uint256 i = 0; i < _tokenAddresses.length; i++) {
-            tokenBalances[i] = BasketCore(_basketCoreAddress).getTokenBalance(tokenAddresses[i]);
+            tokenBalances[i] = BasketCore(_basketCoreAddress).getTokenBalance(_tokenAddresses[i]);
             tokenTotalBalance = tokenTotalBalance.add(tokenBalances[i]);
         }
         require(tokenTotalBalance > amount, "BasketManager: Insufficient redemption token");
@@ -133,8 +147,9 @@ contract BasketManager is Ownable, ReentrancyGuard {
         amounts = new uint256[](_tokenAddresses.length);
         for (uint256 i = 0; i < _tokenAddresses.length; i++) {
             uint256 redemptionAmount = amount.mul(tokenBalances[i]).div(tokenTotalBalance);
+            if (redemptionAmount == 0)  continue;
             // No redemption fee for proportionally redemption
-            amounts[i] = BasketCore(_basketCoreAddress).redeem(msg.sender, tokenAddresses[i], redemptionAmount, 0);
+            amounts[i] = BasketCore(_basketCoreAddress).redeem(msg.sender, _tokenAddresses[i], redemptionAmount, 0);
         }
     }
 }
