@@ -30,7 +30,7 @@ contract BasketManager is Ownable, ReentrancyGuard {
         uint256 index;
     }
 
-    BasketCore private _basketCore;
+    address private _basketCoreAddress;
     address[] private _tokenAddresses;
     mapping(address => Asset) _tokens;
 
@@ -41,7 +41,7 @@ contract BasketManager is Ownable, ReentrancyGuard {
         require(basketCoreAddress != address(0x0), "BasketManager: Basket core address not set.");
 
         _initialize();
-        _basketCore = BasketCore(basketCoreAddress);
+        _basketCoreAddress = basketCoreAddress;
     }
 
     function _initialize() internal override(Ownable, ReentrancyGuard) {
@@ -85,28 +85,19 @@ contract BasketManager is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Updates the BasketCore contract.
-     */
-    function setBasketCore(address basketCoreAddress) public onlyOwner {
-        require(basketCoreAddress != address(0x0), "BasketManager: Basket core is not set");
-        _basketCore = BasketCore(basketCoreAddress);
-    }
-
-    /**
      * @dev Retrieves the BasketCore contract address.
      */
     function getBasketCore() public view returns (address) {
-        return address(_basketCore);
+        return _basketCoreAddress;
     }
 
     /**
-     * @dev Mints new basket token.
-     * @param sourceAddress The address of the user who mints new basket tokens.
+     * @dev Mints new basket token with underlying tokens.
      * @param tokenAddresses The addresses of the underlying assets deposited.
      * @param amounts The amounts of underlying assets deposited.
      * @return The amount of basket token minted.
      */
-    function mint(address sourceAddress, address[] memory tokenAddresses, uint256[] memory amounts) public nonReentrant returns (uint256) {
+    function mint(address[] memory tokenAddresses, uint256[] memory amounts) public nonReentrant returns (uint256) {
         require(tokenAddresses.length == amounts.length, "BasketManager: Token length mismatch");
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
             // If an asset is paused or terminated, it cannot be used to mint new basket token.
@@ -117,7 +108,7 @@ contract BasketManager is Ownable, ReentrancyGuard {
         uint256 mintAmount = 0;
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
             // No mint fee.
-            mintAmount = mintAmount.add(_basketCore.mint(sourceAddress, tokenAddresses[i], amounts[i], 0));
+            mintAmount = mintAmount.add(BasketCore(_basketCoreAddress).mint(msg.sender, tokenAddresses[i], amounts[i], 0));
         }
 
         return mintAmount;
@@ -125,16 +116,15 @@ contract BasketManager is Ownable, ReentrancyGuard {
 
     /**
      * @dev Proportionally redeem the basket token.
-     * @param sourceAddress The address of the user who redeems existing basket tokens.
      * @param amount The amount of basket token to redeem.
      * @return tokenAddresses The underlying assets and their amounts withdrawn.
      */
-    function redeem(address sourceAddress, uint256 amount) public nonReentrant returns (address[] memory tokenAddresses, uint256[] memory amounts) {
+    function redeem(uint256 amount) public nonReentrant returns (address[] memory tokenAddresses, uint256[] memory amounts) {
         require(amount > 0, "BasketManager: Zero redemption amount");
         uint256 tokenTotalBalance = 0;
         uint256[] memory tokenBalances = new uint256[](_tokenAddresses.length);
         for (uint256 i = 0; i < _tokenAddresses.length; i++) {
-            tokenBalances[i] = _basketCore.getTokenBalance(tokenAddresses[i]);
+            tokenBalances[i] = BasketCore(_basketCoreAddress).getTokenBalance(tokenAddresses[i]);
             tokenTotalBalance = tokenTotalBalance.add(tokenBalances[i]);
         }
         require(tokenTotalBalance > amount, "BasketManager: Insufficient redemption token");
@@ -144,7 +134,7 @@ contract BasketManager is Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < _tokenAddresses.length; i++) {
             uint256 redemptionAmount = amount.mul(tokenBalances[i]).div(tokenTotalBalance);
             // No redemption fee for proportionally redemption
-            amounts[i] = _basketCore.redeem(sourceAddress, tokenAddresses[i], redemptionAmount, 0);
+            amounts[i] = BasketCore(_basketCoreAddress).redeem(msg.sender, tokenAddresses[i], redemptionAmount, 0);
         }
     }
 }
