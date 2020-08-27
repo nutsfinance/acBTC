@@ -1,0 +1,28 @@
+{
+  "name": "acbtc",
+  "version": "1.0.0",
+  "description": "AcBTC contracts",
+  "main": "truffle test",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nutsfinance/acBTC.git"
+  },
+  "keywords": [
+    "acBTC"
+  ],
+  "author": "tech@nuts.finance",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/nutsfinance/acBTC/issues"
+  },
+  "homepage": "https://github.com/nutsfinance/acBTC#readme",
+  "dependencies": {
+    "@openzeppelin/test-helpers": "^0.5.6"
+  }
+}
