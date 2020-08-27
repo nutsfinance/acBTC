@@ -12,6 +12,8 @@ const initializeBasketCore = async (deployer, accounts) => {
     const acBTC = await AcBTC.deployed();
 
     await basketCore.initialize(basketManagerProxy.address, feeReceiver.address, acBTC.address);
+    console.log('Basket core: ' + basketCoreProxy.address);
+    console.log('Basket manager: ' + basketManagerProxy.address);
 }
 
 module.exports = function (deployer, network, accounts) {
