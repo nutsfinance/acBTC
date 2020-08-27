@@ -21,7 +21,7 @@ contract BasketToken is ERC20 {
      * @dev Only BasketCore can call functions affected by this modifier.
      */
     modifier onlyBasketCore {
-        require(msg.sender == _basketCoreAddress, "The caller must be BasketCore contract");
+        require(msg.sender == _basketCoreAddress, "BasketToken: The caller must be BasketCore contract");
         _;
     }
 

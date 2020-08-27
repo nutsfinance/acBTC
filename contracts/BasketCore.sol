@@ -191,6 +191,14 @@ contract BasketCore is Ownable {
     }
 
     /**
+     * @dev Updates the basket token contract.
+     */
+    function setBasketToken(address basketTokenAddress) public onlyOwner {
+        require(basketTokenAddress != address(0x0), "BasketCore: Basket token not set");
+        _basketTokenAddress = basketTokenAddress;
+    }    
+
+    /**
      * @dev Retrieves the BasketToken contract address.
      */
     function getBasketToken() public view returns (address) {

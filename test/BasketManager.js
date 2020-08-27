@@ -1,23 +1,26 @@
 const { expectRevert } = require('@openzeppelin/test-helpers');
-const BasketManagerProxy = artifacts.require("BasketManagerProxy");
-const BasketCoreProxy = artifacts.require("BasketCoreProxy");
 const BasketManager = artifacts.require("BasketManager");
 const BasketCore = artifacts.require("BasketCore");
-const AcBTC = artifacts.require("AcBTC");
+const BasketToken = artifacts.require("BasketToken");
+const FeeReceiver = artifacts.require("FeeReceiver");
 const ERC20 = artifacts.require("MockToken");
 const assert = require('assert');
 
 let basketManager;
 let basketCore;
 let basketToken;
+let feeReceiver;
 
-contract("BasketManager", ([owner, proxyAdmin, user1, user2]) => {
-    before(async () => {
-        const basketManagerProxy = await BasketManagerProxy.deployed();
-        basketManager = await BasketManager.at(basketManagerProxy.address);
-        const basketCoreProxy = await BasketCoreProxy.deployed();
-        basketCore = await BasketCore.at(basketCoreProxy.address);
-        basketToken = await AcBTC.deployed();
+contract("BasketManager", ([owner, user1, user2]) => {
+    beforeEach(async () => {
+        basketManager = await BasketManager.new();
+        basketCore = await BasketCore.new();
+        basketToken = await BasketToken.new("Test Token", "TEST", basketCore.address);
+        feeReceiver = await FeeReceiver.new();
+        await basketManager.setBasketCore(basketCore.address);
+        await basketCore.setBasketManager(basketManager.address);
+        await basketCore.setFeeReceiver(feeReceiver.address);
+        await basketCore.setBasketToken(basketToken.address);
     });
     it('should allow add new token by owner', async () => {
         const token = await ERC20.new("Test token", "test");
@@ -65,6 +68,17 @@ contract("BasketManager", ([owner, proxyAdmin, user1, user2]) => {
         // Transfer acBTC to user2
         await basketToken.transfer(user2, 12000, {from: user1});
         await basketToken.approve(basketCore.address, 9000, {from: user2});
+        const prevBalance1 = await token1.balanceOf(user2);
+        const prevBalance2 = await token2.balanceOf(user2);
+        const prevBalance3 = await basketToken.balanceOf(user2);
+
         await basketManager.redeem(9000, {from: user2});
+        const currBalance1 = await token1.balanceOf(user2);
+        const currBalance2 = await token2.balanceOf(user2);
+        const currBalance3 = await basketToken.balanceOf(user2);
+
+        assert.equal(currBalance1 - prevBalance1, 6000);
+        assert.equal(currBalance2 - prevBalance2, 3000);
+        assert.equal(prevBalance3 - currBalance3, 9000);
     });
 });
