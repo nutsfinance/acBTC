@@ -2,6 +2,7 @@
 pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./BasketCore.sol";
 import "./Ownable.sol";
 import "./ReentrancyGuard.sol";
@@ -143,21 +144,45 @@ contract BasketManager is Ownable, ReentrancyGuard {
      */
     function redeem(uint256 amount) public nonReentrant returns (address[] memory tokenAddresses, uint256[] memory amounts) {
         require(amount > 0, "BasketManager: Zero redemption amount");
-        uint256 tokenTotalBalance = 0;
-        uint256[] memory tokenBalances = new uint256[](_tokenAddresses.length);
-        for (uint256 i = 0; i < _tokenAddresses.length; i++) {
-            tokenBalances[i] = BasketCore(_basketCoreAddress).getTokenBalance(_tokenAddresses[i]);
-            tokenTotalBalance = tokenTotalBalance.add(tokenBalances[i]);
-        }
-        require(tokenTotalBalance > amount, "BasketManager: Insufficient redemption token");
+        address basketTokenAddress = BasketCore(_basketCoreAddress).getBasketToken();
+
+        // Since BasketCore enforces the following:
+        //      Sum of all token balances = Total supply of basket token
+        // We could use the total supply of basket token as the total balance of all underlying tokens!
+        uint256 totalBalance = IERC20(basketTokenAddress).totalSupply();
+        require(totalBalance > amount, "BasketManager: Insufficient total balance");
 
         tokenAddresses = _tokenAddresses;
         amounts = new uint256[](_tokenAddresses.length);
         for (uint256 i = 0; i < _tokenAddresses.length; i++) {
-            uint256 redemptionAmount = amount.mul(tokenBalances[i]).div(tokenTotalBalance);
+            uint256 tokenBalance = BasketCore(_basketCoreAddress).getTokenBalance(_tokenAddresses[i]);
+            uint256 redemptionAmount = amount.mul(tokenBalance).div(totalBalance);
             if (redemptionAmount == 0)  continue;
             // No redemption fee for proportionally redemption
             amounts[i] = BasketCore(_basketCoreAddress).redeem(msg.sender, _tokenAddresses[i], redemptionAmount, 0);
+        }
+    }
+
+    /**
+     * @dev Computes the redemption amounts for proportional redemption. Read-only version of redeem() method.
+     * @param amount The amount of basket token to redeem.
+     * @return tokenAddresses The underlying tokens and their amounts withdrawn.
+     */
+    function getRedemptionAmounts(uint256 amount) public view returns (address[] memory tokenAddresses, uint256[] memory amounts) {
+        require(amount > 0, "BasketManager: Zero redemption amount");
+        address basketTokenAddress = BasketCore(_basketCoreAddress).getBasketToken();
+
+        // Since BasketCore enforces the following:
+        //      Sum of all token balances = Total supply of basket token
+        // We could use the total supply of basket token as the total balance of all underlying tokens!
+        uint256 totalBalance = IERC20(basketTokenAddress).totalSupply();
+        require(totalBalance > amount, "BasketManager: Insufficient total balance");
+
+        tokenAddresses = _tokenAddresses;
+        amounts = new uint256[](_tokenAddresses.length);
+        for (uint256 i = 0; i < _tokenAddresses.length; i++) {
+            uint256 tokenBalance = BasketCore(_basketCoreAddress).getTokenBalance(_tokenAddresses[i]);
+            amounts[i] = amount.mul(tokenBalance).div(totalBalance);
         }
     }
 }
