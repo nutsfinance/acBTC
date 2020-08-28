@@ -93,7 +93,7 @@ contract("BasketManager", ([owner, user1, user2]) => {
     it('should allow to mint new tokens', async () => {
         const token = await ERC20.new("Test token", "test");
         await basketManager.addToken(token.address, {from: owner});
-        await token.mint(10000, {from: user1});
+        await token.mint(user1, 10000);
         await token.approve(basketCore.address, 10000, {from: user1});
         const prevBalance = await basketToken.balanceOf(user1);
         const prevCoreBalance = await basketCore.getTokenBalance(token.address);
@@ -108,7 +108,7 @@ contract("BasketManager", ([owner, user1, user2]) => {
         const token = await ERC20.new("Test token", "test");
         await basketManager.addToken(token.address, {from: owner});
         await basketManager.pauseToken(token.address, {from: owner});
-        await token.mint(10000, {from: user1});
+        await token.mint(user1, 10000);
         await token.approve(basketCore.address, 10000, {from: user1});
         await expectRevert(basketManager.mint([token.address], [10000], {from: user1}), "BasketManager: Invalid token status");
 
@@ -117,7 +117,7 @@ contract("BasketManager", ([owner, user1, user2]) => {
         const token = await ERC20.new("Test token", "test");
         await basketManager.addToken(token.address, {from: owner});
         await basketManager.pauseToken(token.address, {from: owner});
-        await token.mint(10000, {from: user1});
+        await token.mint(user1, 10000);
         await token.approve(basketCore.address, 10000, {from: user1});
         const prevBalance = await basketToken.balanceOf(user1);
         const prevCoreBalance = await basketCore.getTokenBalance(token.address);
@@ -132,7 +132,7 @@ contract("BasketManager", ([owner, user1, user2]) => {
         const token = await ERC20.new("Test token", "test");
         await basketManager.addToken(token.address, {from: owner});
         await basketManager.terminateToken(token.address, {from: owner});
-        await token.mint(10000, {from: user1});
+        await token.mint(user1, 10000);
         await token.approve(basketCore.address, 10000, {from: user1});
         await expectRevert(basketManager.mint([token.address], [10000], {from: user1}), "BasketManager: Invalid token status");
 
@@ -140,12 +140,12 @@ contract("BasketManager", ([owner, user1, user2]) => {
     it('should allow redeem basket tokens', async () => {
         const token1 = await ERC20.new("Test token 1", "test1");
         await basketManager.addToken(token1.address, {from: owner});
-        await token1.mint(10000, {from: user1});
+        await token1.mint(user1, 10000);
         await token1.approve(basketCore.address, 10000, {from: user1});
 
         const token2 = await ERC20.new("Test token 2", "test2");
         await basketManager.addToken(token2.address, {from: owner});
-        await token2.mint(10000, {from: user1});
+        await token2.mint(user1, 10000);
         await token2.approve(basketCore.address, 10000, {from: user1});
 
         const prevBalance = await basketToken.balanceOf(user1);
@@ -173,12 +173,12 @@ contract("BasketManager", ([owner, user1, user2]) => {
     it('should allow redeem basket tokens to paused tokens', async () => {
         const token1 = await ERC20.new("Test token 1", "test1");
         await basketManager.addToken(token1.address, {from: owner});
-        await token1.mint(10000, {from: user1});
+        await token1.mint(user1, 10000);
         await token1.approve(basketCore.address, 10000, {from: user1});
 
         const token2 = await ERC20.new("Test token 2", "test2");
         await basketManager.addToken(token2.address, {from: owner});
-        await token2.mint(10000, {from: user1});
+        await token2.mint(user1, 10000);
         await token2.approve(basketCore.address, 10000, {from: user1});
 
         const prevBalance = await basketToken.balanceOf(user1);
@@ -209,12 +209,12 @@ contract("BasketManager", ([owner, user1, user2]) => {
     it('should allow redeem basket tokens to terminated tokens', async () => {
         const token1 = await ERC20.new("Test token 1", "test1");
         await basketManager.addToken(token1.address, {from: owner});
-        await token1.mint(10000, {from: user1});
+        await token1.mint(user1, 10000);
         await token1.approve(basketCore.address, 10000, {from: user1});
 
         const token2 = await ERC20.new("Test token 2", "test2");
         await basketManager.addToken(token2.address, {from: owner});
-        await token2.mint(10000, {from: user1});
+        await token2.mint(user1, 10000);
         await token2.approve(basketCore.address, 10000, {from: user1});
 
         const prevBalance = await basketToken.balanceOf(user1);

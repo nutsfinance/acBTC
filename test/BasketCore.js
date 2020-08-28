@@ -21,7 +21,7 @@ contract("BasketCore", ([owner, basketManager, user, user2]) => {
     });
     it("should mint new basket token by basket manager", async () => {
         const mockToken = await MockToken.new("TEST", "TEST");
-        await mockToken.mint(2000, {from: user});
+        await mockToken.mint(user, 2000, {from: user});
         await mockToken.approve(basketCore.address, 2000, {from: user});
 
         const prevBalance1 = await basketToken.balanceOf(user);
@@ -38,7 +38,7 @@ contract("BasketCore", ([owner, basketManager, user, user2]) => {
     });
     it('should not allow mint other than basket manager', async () => {
         const mockToken = await MockToken.new("TEST", "TEST");
-        await mockToken.mint(2000, {from: user});
+        await mockToken.mint(user, 2000, {from: user});
         await mockToken.approve(basketCore.address, 2000, {from: user});
         
         await expectRevert(basketCore.mint(user, mockToken.address, 400, 5, {from: owner}),
@@ -46,7 +46,7 @@ contract("BasketCore", ([owner, basketManager, user, user2]) => {
     });
     it("should burn basket token by basket manager", async () => {
         const mockToken = await MockToken.new("TEST", "TEST");
-        await mockToken.mint(2000, {from: user});
+        await mockToken.mint(user, 2000, {from: user});
         await mockToken.approve(basketCore.address, 2000, {from: user});
 
         await basketCore.mint(user, mockToken.address, 400, 5, {from: basketManager});
@@ -67,7 +67,7 @@ contract("BasketCore", ([owner, basketManager, user, user2]) => {
     });
     it("should not allow burn basket token other than basket manager", async () => {
         const mockToken = await MockToken.new("TEST", "TEST");
-        await mockToken.mint(2000, {from: user});
+        await mockToken.mint(user, 2000, {from: user});
         await mockToken.approve(basketCore.address, 2000, {from: user});
 
         await basketCore.mint(user, mockToken.address, 400, 5, {from: basketManager});
