@@ -22,14 +22,17 @@ contract("BasketCore", ([owner, basketManager, user, user2]) => {
         await mockToken.mint(user, 2000, {from: user});
         await mockToken.approve(basketCore.address, 2000, {from: user});
 
+        const prevSupply = await basketToken.totalSupply();
         const prevBalance1 = await basketToken.balanceOf(user);
         const prevBalance2 = await basketToken.balanceOf(feeReceiver.address);
         const prevBalance3 = await mockToken.balanceOf(user);
         await basketCore.mint(user, mockToken.address, 400, 5, {from: basketManager});
+        const currSupply = await basketToken.totalSupply();
         const currBalance1 = await basketToken.balanceOf(user);
         const currBalance2 = await basketToken.balanceOf(feeReceiver.address);
         const currBalance3 = await mockToken.balanceOf(user);
 
+        assert.equal(currSupply - prevSupply, 400);
         assert.equal(currBalance1 - prevBalance1, 395);
         assert.equal(currBalance2 - prevBalance2, 5);
         assert.equal(prevBalance3 - currBalance3, 400);

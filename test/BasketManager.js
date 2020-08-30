@@ -93,14 +93,17 @@ contract("BasketManager", ([owner, user1, user2]) => {
         await basketManager.addToken(token.address, {from: owner});
         await token.mint(user1, 10000);
         await token.approve(basketCore.address, 10000, {from: user1});
+        const prevSupply = await basketToken.totalSupply();
         const prevBalance = await basketToken.balanceOf(user1);
         const prevCoreBalance = await basketCore.getTokenBalance(token.address);
         await basketManager.mint([token.address], [10000], {from: user1});
+        const currSupply = await basketToken.totalSupply();
         const currBalance = await basketToken.balanceOf(user1);
         const currCoreBalance = await basketCore.getTokenBalance(token.address);
+
+        assert.equal(currSupply - prevSupply, 10000);
         assert.equal(currBalance - prevBalance, 10000);
         assert.equal(currCoreBalance - prevCoreBalance, 10000);
-
     });
     it('should not allow to mint with paused tokens', async () => {
         const token = await ERC20.new("Test token", "test");
@@ -117,12 +120,16 @@ contract("BasketManager", ([owner, user1, user2]) => {
         await basketManager.pauseToken(token.address, {from: owner});
         await token.mint(user1, 10000);
         await token.approve(basketCore.address, 10000, {from: user1});
+        const prevSupply = await basketToken.totalSupply();
         const prevBalance = await basketToken.balanceOf(user1);
         const prevCoreBalance = await basketCore.getTokenBalance(token.address);
         await basketManager.unpauseToken(token.address, {from: owner});
         await basketManager.mint([token.address], [10000], {from: user1});
+        const currSupply = await basketToken.totalSupply();
         const currBalance = await basketToken.balanceOf(user1);
         const currCoreBalance = await basketCore.getTokenBalance(token.address);
+
+        assert.equal(currSupply - prevSupply, 10000);
         assert.equal(currBalance - prevBalance, 10000);
         assert.equal(currCoreBalance - prevCoreBalance, 10000);
     });
