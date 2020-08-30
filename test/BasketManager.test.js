@@ -11,7 +11,7 @@ let basketCore;
 let basketToken;
 let feeReceiver;
 
-contract("BasketManager", ([owner, user1, user2]) => {
+contract("BasketManager", ([owner, user1, user2, basketCore2]) => {
     beforeEach(async () => {
         basketManager = await BasketManager.new();
         basketCore = await BasketCore.new();
@@ -19,6 +19,15 @@ contract("BasketManager", ([owner, user1, user2]) => {
         feeReceiver = await FeeReceiver.new();
         await basketManager.initialize(basketCore.address);
         await basketCore.initialize(basketManager.address, feeReceiver.address, basketToken.address);
+    });
+    it("should be able to set basket core by owner", async () => {
+        assert.equal(await basketManager.getBasketCore(), basketCore.address);
+        await basketManager.setBasketCore(basketCore2);
+        assert.equal(await basketManager.getBasketCore(), basketCore2);
+    });
+    it("should not be able to set basket core other than owner", async () => {
+        await expectRevert(basketManager.setBasketCore(basketCore2, {from: user1}),
+            "Ownable: caller is not the owner");
     });
     it('should allow to add new token by owner', async () => {
         const token = await ERC20.new("Test token", "test");
@@ -255,5 +264,29 @@ contract("BasketManager", ([owner, user1, user2]) => {
         assert.equal(currBalance1 - prevBalance1, 6000);
         assert.equal(currBalance2 - prevBalance2, 3000);
         assert.equal(prevBalance3 - currBalance3, 9000);
+    });
+    it('should return correct redemption amounts', async () => {
+        const token1 = await ERC20.new("Test token 1", "test1");
+        await basketManager.addToken(token1.address, {from: owner});
+        await token1.mint(user1, 10000);
+        await token1.approve(basketCore.address, 10000, {from: user1});
+
+        const token2 = await ERC20.new("Test token 2", "test2");
+        await basketManager.addToken(token2.address, {from: owner});
+        await token2.mint(user1, 10000);
+        await token2.approve(basketCore.address, 10000, {from: user1});
+
+        await basketManager.mint([token1.address], [10000], {from: user1});
+        await basketManager.mint([token2.address], [5000], {from: user1});
+
+        // Transfer acBTC to user2
+        await basketToken.transfer(user2, 12000, {from: user1});
+        await basketToken.approve(basketCore.address, 9000, {from: user2});
+
+        const result = await basketManager.getRedemptionAmounts(9000);
+
+        assert.deepEqual(result.tokenAddresses, [token1.address, token2.address]);
+        assert.equal(result.amounts[0], 6000);
+        assert.equal(result.amounts[1], 3000);
     });
 });

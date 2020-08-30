@@ -23,7 +23,8 @@ contract("BasketCore", ([owner, basketManager, user, user2, basketManager2, feeR
         assert.equal(await basketCore.getBasketManager(), basketManager2);
     }),
     it("should not allow to set basket manager other than owner", async () => {
-        await expectRevert(basketCore.setBasketManager(basketManager2, {from: user}), "Ownable: caller is not the owner");
+        await expectRevert(basketCore.setBasketManager(basketManager2, {from: user}),
+            "Ownable: caller is not the owner");
     });
     it("should be able to set fee receiver by owner", async () => {
         assert.equal(await basketCore.getFeeReceiver(), feeReceiver.address);
@@ -31,7 +32,8 @@ contract("BasketCore", ([owner, basketManager, user, user2, basketManager2, feeR
         assert.equal(await basketCore.getFeeReceiver(), feeReceiver2);
     }),
     it("should not allow to set fee receiver other than owner", async () => {
-        await expectRevert(basketCore.setFeeReceiver(feeReceiver2, {from: user}), "Ownable: caller is not the owner");
+        await expectRevert(basketCore.setFeeReceiver(feeReceiver2, {from: user}), 
+            "Ownable: caller is not the owner");
     });
     it("should be able to set basket token by owner", async () => {
         assert.equal(await basketCore.getBasketToken(), basketToken.address);

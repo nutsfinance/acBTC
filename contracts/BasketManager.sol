@@ -89,7 +89,7 @@ contract BasketManager is Ownable, Initializable, ReentrancyGuard {
     /**
      * @dev Updates the BasketCore contract address.
      */
-    function setBasketCore(address basketCoreAddress) public {
+    function setBasketCore(address basketCoreAddress) public onlyOwner {
         require(basketCoreAddress != address(0x0), "BasketManager: Basket core address not set.");
         _basketCoreAddress = basketCoreAddress;
     }
