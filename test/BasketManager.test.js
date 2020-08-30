@@ -29,6 +29,12 @@ contract("BasketManager", ([owner, user1, user2, basketCore2]) => {
         await expectRevert(basketManager.setBasketCore(basketCore2, {from: user1}),
             "Ownable: caller is not the owner");
     });
+    it("should be able to set basket core by a new owner", async () => {
+        assert.equal(await basketManager.getBasketCore(), basketCore.address);
+        await basketManager.transferOwnership(user1);
+        await basketManager.setBasketCore(basketCore2, {from: user1});
+        assert.equal(await basketManager.getBasketCore(), basketCore2);
+    });
     it('should allow to add new token by owner', async () => {
         const token = await ERC20.new("Test token", "test");
         await basketManager.addToken(token.address, {from: owner});
