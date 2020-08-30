@@ -15,9 +15,7 @@ contract("BasketCore", ([owner, basketManager, user, user2]) => {
         basketCore = await BasketCore.new();
         basketToken = await BasketToken.new("Test Token", "TEST", basketCore.address);
         feeReceiver = await FeeReceiver.new();
-        await basketCore.setBasketManager(basketManager);
-        await basketCore.setFeeReceiver(feeReceiver.address);
-        await basketCore.setBasketToken(basketToken.address);
+        await basketCore.initialize(basketManager, feeReceiver.address, basketToken.address);
     });
     it("should mint new basket token by basket manager", async () => {
         const mockToken = await MockToken.new("TEST", "TEST");
@@ -52,15 +50,19 @@ contract("BasketCore", ([owner, basketManager, user, user2]) => {
         await basketCore.mint(user, mockToken.address, 400, 5, {from: basketManager});
         await basketToken.transfer(user2, 200, {from: user});
 
+        const prevSupply = await basketToken.totalSupply();
         const prevBalance1 = await basketToken.balanceOf(user2);
         const prevBalance2 = await basketToken.balanceOf(feeReceiver.address);
         const prevBalance3 = await mockToken.balanceOf(user2);
         await basketToken.approve(basketCore.address, 150, {from: user2});
         await basketCore.redeem(user2, mockToken.address, 150, 15, {from: basketManager});
+        const currSupply = await basketToken.totalSupply();
         const currBalance1 = await basketToken.balanceOf(user2);
         const currBalance2 = await basketToken.balanceOf(feeReceiver.address);
         const currBalance3 = await mockToken.balanceOf(user2);
 
+        // 15 basket tokens are paid as fee.
+        assert.equal(prevSupply - currSupply, 135);
         assert.equal(prevBalance1 - currBalance1, 150);
         assert.equal(currBalance2 - prevBalance2, 15);
         assert.equal(currBalance3 - prevBalance3, 135);

@@ -4,13 +4,14 @@ pragma solidity 0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./BasketCore.sol";
+import "./Initializable.sol";
 import "./Ownable.sol";
 import "./ReentrancyGuard.sol";
 
 /**
  * @notice The basket manager contract which interacts with basket core to mint and redeem basket tokens.
  */
-contract BasketManager is Ownable, ReentrancyGuard {
+contract BasketManager is Ownable, Initializable, ReentrancyGuard {
     using SafeMath for uint256;
 
     /**
@@ -38,7 +39,7 @@ contract BasketManager is Ownable, ReentrancyGuard {
     /**
      * @dev Initializes the contract in the proxy.
      */
-    function initialize(address basketCoreAddress) public {
+    function initialize(address basketCoreAddress) public initializer {
         require(basketCoreAddress != address(0x0), "BasketManager: Basket core address not set.");
 
         _initialize();
@@ -130,7 +131,8 @@ contract BasketManager is Ownable, ReentrancyGuard {
 
         uint256 mintAmount = 0;
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
-            // No mint fee.
+            // No mint fee in the current version.
+            // This might change in the future by upgrading the BasketManager.
             mintAmount = mintAmount.add(BasketCore(_basketCoreAddress).mint(msg.sender, tokenAddresses[i], amounts[i], 0));
         }
 
@@ -158,7 +160,8 @@ contract BasketManager is Ownable, ReentrancyGuard {
             uint256 tokenBalance = BasketCore(_basketCoreAddress).getTokenBalance(_tokenAddresses[i]);
             uint256 redemptionAmount = amount.mul(tokenBalance).div(totalBalance);
             if (redemptionAmount == 0)  continue;
-            // No redemption fee for proportionally redemption
+            // No redemption fee for proportionally redemption in the current version.
+            // This might change in the future by upgrading BasketManager.
             amounts[i] = BasketCore(_basketCoreAddress).redeem(msg.sender, _tokenAddresses[i], redemptionAmount, 0);
         }
     }

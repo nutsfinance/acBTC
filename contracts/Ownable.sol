@@ -14,14 +14,6 @@ abstract contract Ownable {
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
-    constructor () internal {
-        _owner = msg.sender;
-        emit OwnershipTransferred(address(0), msg.sender);
-    }
-
-    /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
-     */
     function _initialize() internal virtual {
         require(_owner == address(0x0), "Ownable: already initialized");
         _owner = msg.sender;

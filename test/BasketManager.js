@@ -17,10 +17,8 @@ contract("BasketManager", ([owner, user1, user2]) => {
         basketCore = await BasketCore.new();
         basketToken = await BasketToken.new("Test Token", "TEST", basketCore.address);
         feeReceiver = await FeeReceiver.new();
-        await basketManager.setBasketCore(basketCore.address);
-        await basketCore.setBasketManager(basketManager.address);
-        await basketCore.setFeeReceiver(feeReceiver.address);
-        await basketCore.setBasketToken(basketToken.address);
+        await basketManager.initialize(basketCore.address);
+        await basketCore.initialize(basketManager.address, feeReceiver.address, basketToken.address);
     });
     it('should allow to add new token by owner', async () => {
         const token = await ERC20.new("Test token", "test");
@@ -157,15 +155,18 @@ contract("BasketManager", ([owner, user1, user2]) => {
         // Transfer acBTC to user2
         await basketToken.transfer(user2, 12000, {from: user1});
         await basketToken.approve(basketCore.address, 9000, {from: user2});
+        const prevSupply = await basketToken.totalSupply();
         const prevBalance1 = await token1.balanceOf(user2);
         const prevBalance2 = await token2.balanceOf(user2);
         const prevBalance3 = await basketToken.balanceOf(user2);
 
         await basketManager.redeem(9000, {from: user2});
+        const currSupply = await basketToken.totalSupply();
         const currBalance1 = await token1.balanceOf(user2);
         const currBalance2 = await token2.balanceOf(user2);
         const currBalance3 = await basketToken.balanceOf(user2);
 
+        assert.equal(prevSupply - currSupply, 9000);
         assert.equal(currBalance1 - prevBalance1, 6000);
         assert.equal(currBalance2 - prevBalance2, 3000);
         assert.equal(prevBalance3 - currBalance3, 9000);
@@ -196,12 +197,15 @@ contract("BasketManager", ([owner, user1, user2]) => {
         const prevBalance1 = await token1.balanceOf(user2);
         const prevBalance2 = await token2.balanceOf(user2);
         const prevBalance3 = await basketToken.balanceOf(user2);
+        const prevSupply = await basketToken.totalSupply();
 
         await basketManager.redeem(9000, {from: user2});
         const currBalance1 = await token1.balanceOf(user2);
         const currBalance2 = await token2.balanceOf(user2);
         const currBalance3 = await basketToken.balanceOf(user2);
+        const currSupply = await basketToken.totalSupply();
 
+        assert.equal(prevSupply - currSupply, 9000);
         assert.equal(currBalance1 - prevBalance1, 6000);
         assert.equal(currBalance2 - prevBalance2, 3000);
         assert.equal(prevBalance3 - currBalance3, 9000);
@@ -232,12 +236,15 @@ contract("BasketManager", ([owner, user1, user2]) => {
         const prevBalance1 = await token1.balanceOf(user2);
         const prevBalance2 = await token2.balanceOf(user2);
         const prevBalance3 = await basketToken.balanceOf(user2);
+        const prevSupply = await basketToken.totalSupply();
 
         await basketManager.redeem(9000, {from: user2});
         const currBalance1 = await token1.balanceOf(user2);
         const currBalance2 = await token2.balanceOf(user2);
         const currBalance3 = await basketToken.balanceOf(user2);
+        const currSupply = await basketToken.totalSupply();
 
+        assert.equal(prevSupply - currSupply, 9000);
         assert.equal(currBalance1 - prevBalance1, 6000);
         assert.equal(currBalance2 - prevBalance2, 3000);
         assert.equal(prevBalance3 - currBalance3, 9000);

@@ -4,6 +4,7 @@ pragma solidity 0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "./Initializable.sol";
 import "./Ownable.sol";
 import "./receiver/IFeeReceiver.sol";
 import "./BasketToken.sol";
@@ -16,7 +17,7 @@ import "./BasketToken.sol";
  * which is the responsibility of BasketManager.
  * @dev Users who want to mint or swap must approve to the BasketCore.
  */
-contract BasketCore is Ownable {
+contract BasketCore is Ownable, Initializable {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -53,7 +54,7 @@ contract BasketCore is Ownable {
      * @dev Initializes the BasketCore contract in proxy.
      * The caller will become the owner of the contract.
      */
-    function initialize(address basketManagerAddress, address feeReceiverAddress, address basketTokenAddress) public {
+    function initialize(address basketManagerAddress, address feeReceiverAddress, address basketTokenAddress) public initializer {
         require(basketManagerAddress != address(0x0), "BasketCore: Basket manager not set");
         require(feeReceiverAddress != address(0x0), "BasketCore: Fee receiver not set");
         require(basketTokenAddress != address(0x0), "BasketCore: Basket token not set");
@@ -87,6 +88,7 @@ contract BasketCore is Ownable {
             BasketToken(_basketTokenAddress).mint(_feeReceiverAddress, feeAmount);
             IFeeReceiver(_feeReceiverAddress).onFeeReceived(_basketTokenAddress, feeAmount);
         }
+        // Mints the mint amount of basket token to maintain the invariant.
         BasketToken(_basketTokenAddress).mint(sourceAddress, mintAmount);
         emit Minted(sourceAddress, tokenAddress, amount, mintAmount);
 
@@ -120,6 +122,8 @@ contract BasketCore is Ownable {
             IFeeReceiver(_feeReceiverAddress).onFeeReceived(_basketTokenAddress, feeAmount);
         }
         IERC20(tokenAddress).safeTransfer(sourceAddress, redemptionAmount);
+        // Burns the redemption amount of basket token to maintain the invariant.
+        BasketToken(_basketTokenAddress).burn(address(this), redemptionAmount);
         emit Redeemed(sourceAddress, tokenAddress, amount, redemptionAmount);
 
         return redemptionAmount;
