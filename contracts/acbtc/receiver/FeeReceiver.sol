@@ -2,6 +2,7 @@
 pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./IFeeReceiver.sol";
 
@@ -10,6 +11,8 @@ import "./IFeeReceiver.sol";
  * @dev Only admin can withdraw fees from the contract.
  */
 contract FeeReceiver is IFeeReceiver, AccessControl {
+
+    using SafeERC20 for IERC20;
 
     /**
      * @dev A fee is received.
@@ -55,6 +58,6 @@ contract FeeReceiver is IFeeReceiver, AccessControl {
      * @param amount Amount of token to withdraw.
      */
     function withdrawToken(address tokenAddress, uint256 amount) public onlyAdmin {
-        IERC20(tokenAddress).transfer(msg.sender, amount);
+        IERC20(tokenAddress).safeTransfer(msg.sender, amount);
     }
 }
