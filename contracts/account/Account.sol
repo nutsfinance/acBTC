@@ -94,7 +94,8 @@ contract Account is AccessControl {
      * @param amount Amount of ETH to withdraw.
      */
     function withdraw(address payable targetAddress, uint256 amount) public onlyOperator {
-        targetAddress.transfer(amount);
+        (bool success,) = targetAddress.call{value: amount}(new bytes(0));
+        require(success, 'Account: Withdraw ETH failed');
         emit Withdrawn(Constants.getEthAddress(), targetAddress, amount);
     }
 
