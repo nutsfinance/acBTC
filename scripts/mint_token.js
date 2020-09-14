@@ -3,7 +3,7 @@ const MockToken = artifacts.require("MockToken");
 
 module.exports = async function (callback) {
     try {
-        const mockToken = await MockToken.at(argv.address);
+        const mockToken = await MockToken.at(argv.token);
         await mockToken.mint(argv.target, argv.amount);
 
         callback();
