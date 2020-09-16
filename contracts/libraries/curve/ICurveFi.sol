@@ -3,6 +3,7 @@ pragma solidity 0.6.8;
 
 /**
  * @notice Interface for Curve.fi's REN pool.
+ * Note that we are using array of 2 as Curve's REN pool contains only WBTC and renBTC.
  */
 interface ICurveFi {
     function get_virtual_price() external view returns (uint256);

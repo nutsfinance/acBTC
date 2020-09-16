@@ -18,6 +18,9 @@ contract Vault is ERC20 {
     address public governance;
     address public strategy;
 
+    event Deposited(address indexed user, uint256 amount, uint256 shareAmount);
+    event Withdrawn(address indexed user, uint256 amount, uint256 shareAmount);
+
     constructor(address _token) public
         ERC20(
             string(abi.encodePacked("ACoconut ", ERC20(_token).name())),
@@ -28,16 +31,25 @@ contract Vault is ERC20 {
         governance = msg.sender;
     }
 
+    /**
+     * @dev Returns the total balance in both vault and strategy.
+     */
     function balance() public view returns (uint256) {
         return strategy == address(0x0) ? token.balanceOf(address(this)) :
             token.balanceOf(address(this)).add(IStrategy(strategy).balanceOf());
     }
 
+    /**
+     * @dev Updates the govenance address.
+     */
     function setGovernance(address _governance) public {
         require(msg.sender == governance, "Vault: Not governance");
         governance = _governance;
     }
 
+    /**
+     * @dev Updates the active strategy of the vault. The strategy must be valid, otherwise earn() will fail.
+     */
     function setStrategy(address _strategy) public {
         require(msg.sender == governance, "Vault: Not governance");
         require(address(token) == IStrategy(_strategy).want(), "Vault: Different token");
@@ -52,6 +64,9 @@ contract Vault is ERC20 {
         earn();
     }
 
+    /**
+     * @dev Starts earning and deposits all current balance into strategy.
+     */
     function earn() public {
         require(strategy != address(0x0), "Vault: No strategy");
         uint256 _bal = token.balanceOf(address(this));
@@ -59,11 +74,15 @@ contract Vault is ERC20 {
         IStrategy(strategy).deposit();
     }
 
+    /**
+     * @dev Deposits all balance to the vault.
+     */
     function depositAll() public {
         deposit(token.balanceOf(msg.sender));
     }
 
     function deposit(uint256 _amount) public {
+        require(_amount > 0, "Vault: Can not deposit 0");
         uint256 _pool = balance();
         uint256 _before = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), _amount);
@@ -76,6 +95,8 @@ contract Vault is ERC20 {
             shares = (_amount.mul(totalSupply())).div(_pool);
         }
         _mint(msg.sender, shares);
+
+        emit Deposited(msg.sender, _amount, shares);
     }
 
     function withdrawAll() public {
@@ -83,6 +104,7 @@ contract Vault is ERC20 {
     }
 
     function withdraw(uint256 _shares) public {
+        require(_shares > 0, "Vault: Can not withdraw 0");
         uint256 r = (balance().mul(_shares)).div(totalSupply());
         _burn(msg.sender, _shares);
 
@@ -101,6 +123,7 @@ contract Vault is ERC20 {
         }
 
         token.safeTransfer(msg.sender, r);
+        emit Withdrawn(msg.sender, r, _shares);
     }
 
     /**
@@ -108,7 +131,7 @@ contract Vault is ERC20 {
      */
     function salvage(address tokenAddress, uint256 amount) public {
         require(msg.sender == governance, "Vault: Not governance");
-        require(tokenAddress != address(token), "Vault: Cannot salvage");
+        require(tokenAddress != address(token), "Vault: Cannot salvage vault token");
         IERC20(tokenAddress).safeTransfer(governance, amount);
     }
 

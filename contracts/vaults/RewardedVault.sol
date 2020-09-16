@@ -9,13 +9,16 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./Vault.sol";
 
+/**
+ * @notice A vault with rewards.
+ */
 contract RewardedVault is Vault {
     using SafeERC20 for IERC20;
     using Address for address;
     using SafeMath for uint256;
 
     IERC20 public rewardToken;
-    uint256 public constant DURATION = 7 days;
+    uint256 public constant DURATION = 7 days;      // Rewards are vested for a fixed duration of 7 days.
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
     uint256 public lastUpdateTime;
@@ -24,8 +27,6 @@ contract RewardedVault is Vault {
     mapping(address => uint256) public rewards;
 
     event RewardAdded(uint256 reward);
-    event Staked(address indexed user, uint256 amount);
-    event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
 
     constructor(address _rewardToken, address _vaultToken) public Vault(_vaultToken) {
@@ -69,20 +70,24 @@ contract RewardedVault is Vault {
                 .add(rewards[account]);
     }
 
-    function stake(uint256 amount) public updateReward(msg.sender) {
-        require(amount > 0, "RewardedVault: Cannot stake 0");
-        super.stake(amount);
-        emit Staked(msg.sender, amount);
+    function deposit(uint256 amount) public updateReward(msg.sender) {
+        super.deposit(amount);
+    }
+
+    function depositAll() public updateReward(msg.sender) {
+        super.depositAll();
     }
 
     function withdraw(uint256 amount) public updateReward(msg.sender) {
-        require(amount > 0, "RewardedVault: Cannot withdraw 0");
         super.withdraw(amount);
-        emit Withdrawn(msg.sender, amount);
+    }
+
+    function withdrawAll() public updateReward(msg.sender) {
+        super.withdrawAll();
     }
 
     function exit() external {
-        withdraw(balanceOf(msg.sender));
+        withdrawAll();
         getReward();
     }
 
