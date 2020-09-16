@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "../libraries/curve/ICurveFi.sol";
-import "../libraries/curve/ICurveGauge.sol";
-import "../libraries/curve/ICurveMinter.sol";
-import "../libraries/uniswap/IUniswapRouter.sol";
+import "../curve/ICurveFi.sol";
+import "../curve/ICurveGauge.sol";
+import "../curve/ICurveMinter.sol";
+import "../uniswap/IUniswapRouter.sol";
 
 import "./IStrategy.sol";
 
