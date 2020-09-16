@@ -30,4 +30,9 @@ interface IStrategy {
      * @dev Withdraws all funds from the strategy.
      */
     function withdrawAll() external returns (uint256);
+    
+    /**
+     * @dev Claims CRV from Curve and convert it back to renCRV.
+     */
+    function harvest() external returns (uint256);
 }

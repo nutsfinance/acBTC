@@ -78,9 +78,9 @@ contract StrategyCurveRenBTC is IStrategy {
 
     /**
      * @dev Claims CRV from Curve and convert it back to renCRV.
+     * Anyone can trigger the harvest!
      */
     function harvest() public {
-        require(msg.sender == governance, "StrategyCurveRenBTC: Not governance");
         // Claims CRV from Curve
         ICurveMinter(mintr).mint(pool);
         uint256 _crv = IERC20(crv).balanceOf(address(this));

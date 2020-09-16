@@ -18,8 +18,8 @@ contract Vault is ERC20 {
     address public governance;
     address public strategy;
 
-    event Deposited(address indexed user, uint256 amount, uint256 shareAmount);
-    event Withdrawn(address indexed user, uint256 amount, uint256 shareAmount);
+    event Deposited(address indexed user, address indexed token, uint256 amount, uint256 shareAmount);
+    event Withdrawn(address indexed user, address indexed token, uint256 amount, uint256 shareAmount);
 
     constructor(address _token) public
         ERC20(
@@ -99,7 +99,7 @@ contract Vault is ERC20 {
         }
         _mint(msg.sender, shares);
 
-        emit Deposited(msg.sender, _amount, shares);
+        emit Deposited(msg.sender, address(token), _amount, shares);
     }
 
     /**
@@ -132,7 +132,7 @@ contract Vault is ERC20 {
         }
 
         token.safeTransfer(msg.sender, r);
-        emit Withdrawn(msg.sender, r, _shares);
+        emit Withdrawn(msg.sender, address(token), r, _shares);
     }
 
     /**

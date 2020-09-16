@@ -71,19 +71,19 @@ contract RewardedVault is Vault {
                 .add(rewards[account]);
     }
 
-    function deposit(uint256 amount) public override updateReward(msg.sender) {
+    function deposit(uint256 amount) public virtual override updateReward(msg.sender) {
         super.deposit(amount);
     }
 
-    function depositAll() public override updateReward(msg.sender) {
+    function depositAll() public virtual override updateReward(msg.sender) {
         super.depositAll();
     }
 
-    function withdraw(uint256 amount) public override updateReward(msg.sender) {
-        super.withdraw(amount);
+    function withdraw(uint256 _shares) public virtual override updateReward(msg.sender) {
+        super.withdraw(_shares);
     }
 
-    function withdrawAll() public override updateReward(msg.sender) {
+    function withdrawAll() public virtual override updateReward(msg.sender) {
         super.withdrawAll();
     }
 
