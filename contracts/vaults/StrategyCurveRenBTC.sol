@@ -13,6 +13,9 @@ import "../libraries/uniswap/IUniswapRouter.sol";
 
 import "./IStrategy.sol";
 
+/**
+ * @dev Earning strategy that accepts renCRV, earns CRV and converts CRV back to renCRV as yield.
+ */
 contract StrategyCurveRenBTC is IStrategy {
     using SafeERC20 for IERC20;
     using Address for address;
@@ -36,6 +39,9 @@ contract StrategyCurveRenBTC is IStrategy {
         vault = _vault;
     }
 
+    /**
+     * @dev Deposits all renCRV into Curve liquidity gauge to earn CRV.
+     */
     function deposit() public override {
         uint256 _want = IERC20(want).balanceOf(address(this));
         if (_want > 0) {
@@ -45,7 +51,9 @@ contract StrategyCurveRenBTC is IStrategy {
         }
     }
 
-    // Withdraw partial funds, normally used with a vault withdrawal
+    /**
+     * @dev Withdraw partial funds, normally used with a vault withdrawal
+     */
     function withdraw(uint256 _amount) public override {
         require(msg.sender == vault, "StrategyCurveRenBTC: Not vault");
         uint256 _balance = IERC20(want).balanceOf(address(this));
@@ -57,24 +65,27 @@ contract StrategyCurveRenBTC is IStrategy {
         IERC20(want).safeTransfer(vault, _amount);
     }
 
-    // Withdraw all funds, normally used when migrating strategies
+    /**
+     * @dev Withdraw all funds, normally used when migrating strategies
+     */
     function withdrawAll() public override returns (uint256 balance) {
         require(msg.sender == vault, "StrategyCurveRenBTC: Not vault");
-        _withdrawAll();
+        ICurveGauge(pool).withdraw(ICurveGauge(pool).balanceOf(address(this)));
 
         balance = IERC20(want).balanceOf(address(this));
         IERC20(want).safeTransfer(vault, balance);
     }
 
-    function _withdrawAll() internal {
-        ICurveGauge(pool).withdraw(ICurveGauge(pool).balanceOf(address(this)));
-    }
-
+    /**
+     * @dev Claims CRV from Curve and convert it back to renCRV.
+     */
     function harvest() public {
         require(msg.sender == governance, "StrategyCurveRenBTC: Not governance");
+        // Claims CRV from Curve
         ICurveMinter(mintr).mint(pool);
         uint256 _crv = IERC20(crv).balanceOf(address(this));
 
+        // Uniswap: CRV --> WETH --> WBTC
         if (_crv > 0) {
             IERC20(crv).safeApprove(uni, 0);
             IERC20(crv).safeApprove(uni, _crv);
@@ -86,6 +97,7 @@ contract StrategyCurveRenBTC is IStrategy {
 
             IUniswapRouter(uni).swapExactTokensForTokens(_crv, uint256(0), path, address(this), now.add(1800));
         }
+        // Curve: WBTC --> renCRV
         uint256 _wbtc = IERC20(wbtc).balanceOf(address(this));
         if (_wbtc > 0) {
             IERC20(wbtc).safeApprove(curve, 0);
