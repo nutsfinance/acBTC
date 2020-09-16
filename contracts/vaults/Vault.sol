@@ -59,7 +59,7 @@ contract Vault is ERC20 {
         IStrategy(strategy).deposit();
     }
 
-    function depositAll() external {
+    function depositAll() public {
         deposit(token.balanceOf(msg.sender));
     }
 
@@ -78,17 +78,8 @@ contract Vault is ERC20 {
         _mint(msg.sender, shares);
     }
 
-    function withdrawAll() external {
+    function withdrawAll() public {
         withdraw(balanceOf(msg.sender));
-    }
-
-    /**
-     * @dev Used to salvage any token deposited into the vault by mistake.
-     */
-    function salvage(address tokenAddress, uint256 amount) external {
-        require(msg.sender == governance, "Vault: Not governance");
-        require(tokenAddress != address(token), "Vault: Cannot salvage");
-        IERC20(tokenAddress).safeTransfer(governance, amount);
     }
 
     function withdraw(uint256 _shares) public {
@@ -110,6 +101,15 @@ contract Vault is ERC20 {
         }
 
         token.safeTransfer(msg.sender, r);
+    }
+
+    /**
+     * @dev Used to salvage any token deposited into the vault by mistake.
+     */
+    function salvage(address tokenAddress, uint256 amount) public {
+        require(msg.sender == governance, "Vault: Not governance");
+        require(tokenAddress != address(token), "Vault: Cannot salvage");
+        IERC20(tokenAddress).safeTransfer(governance, amount);
     }
 
     function getPricePerFullShare() public view returns (uint256) {
