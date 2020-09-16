@@ -77,11 +77,14 @@ contract Vault is ERC20 {
     /**
      * @dev Deposits all balance to the vault.
      */
-    function depositAll() public {
+    function depositAll() public virtual {
         deposit(token.balanceOf(msg.sender));
     }
 
-    function deposit(uint256 _amount) public {
+    /**
+     * @dev Deposit some balance to the vault.
+     */
+    function deposit(uint256 _amount) public virtual {
         require(_amount > 0, "Vault: Can not deposit 0");
         uint256 _pool = balance();
         uint256 _before = token.balanceOf(address(this));
@@ -99,11 +102,17 @@ contract Vault is ERC20 {
         emit Deposited(msg.sender, _amount, shares);
     }
 
-    function withdrawAll() public {
+    /**
+     * @dev Withdraws all balance out of the vault.
+     */
+    function withdrawAll() public virtual {
         withdraw(balanceOf(msg.sender));
     }
 
-    function withdraw(uint256 _shares) public {
+    /**
+     * @dev Withdraws some balance out of the vault.
+     */
+    function withdraw(uint256 _shares) public virtual {
         require(_shares > 0, "Vault: Can not withdraw 0");
         uint256 r = (balance().mul(_shares)).div(totalSupply());
         _burn(msg.sender, _shares);
@@ -135,6 +144,9 @@ contract Vault is ERC20 {
         IERC20(tokenAddress).safeTransfer(governance, amount);
     }
 
+    /**
+     * @dev Returns the number of vault token per share is worth.
+     */
     function getPricePerFullShare() public view returns (uint256) {
         return balance().mul(1e18).div(totalSupply());
     }

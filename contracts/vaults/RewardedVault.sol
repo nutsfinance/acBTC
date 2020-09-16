@@ -2,6 +2,7 @@
 pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -45,7 +46,7 @@ contract RewardedVault is Vault {
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
-        return SafeMath.min(block.timestamp, periodFinish);
+        return Math.min(block.timestamp, periodFinish);
     }
 
     function rewardPerToken() public view returns (uint256) {
@@ -70,27 +71,33 @@ contract RewardedVault is Vault {
                 .add(rewards[account]);
     }
 
-    function deposit(uint256 amount) public updateReward(msg.sender) {
+    function deposit(uint256 amount) public override updateReward(msg.sender) {
         super.deposit(amount);
     }
 
-    function depositAll() public updateReward(msg.sender) {
+    function depositAll() public override updateReward(msg.sender) {
         super.depositAll();
     }
 
-    function withdraw(uint256 amount) public updateReward(msg.sender) {
+    function withdraw(uint256 amount) public override updateReward(msg.sender) {
         super.withdraw(amount);
     }
 
-    function withdrawAll() public updateReward(msg.sender) {
+    function withdrawAll() public override updateReward(msg.sender) {
         super.withdrawAll();
     }
 
+    /**
+     * @dev Withdraws all balance and all rewards from the vault.
+     */
     function exit() external {
         withdrawAll();
         getReward();
     }
 
+    /**
+     * @dev Withdraws all rewards from the vault.
+     */
     function getReward() public updateReward(msg.sender) {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
@@ -100,6 +107,9 @@ contract RewardedVault is Vault {
         }
     }
 
+    /**
+     * @dev Add new rewards to the vault. All rewards will be distributed linearly in 7 days.
+     */
     function addRewardAmount(uint256 reward) public updateReward(address(0)) {
         require(msg.sender == governance, "RewardedVault: Not governance");
         rewardToken.safeTransferFrom(msg.sender, address(this), reward);
