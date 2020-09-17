@@ -15,6 +15,14 @@ contract ACoconut is ERC20 {
         governance = msg.sender;
     }
 
+    /**
+     * @dev Updates the govenance address.
+     */
+    function setGovernance(address _governance) public {
+        require(msg.sender == governance, "ACoconut: Not governance");
+        governance = _governance;
+    }
+
     function setMinter(address user, bool allowed) public {
         require(msg.sender == governance, "ACoconut: not governance");
         minters[user] = allowed;

@@ -9,12 +9,12 @@ interface IMigrator {
     /**
      * @dev What token is migrated from.
      */
-    function want() external returns (address);
+    function want() external view returns (address);
 
     /**
      * @dev What token is migrated to.
      */
-    function get() external returns (address);
+    function get() external view returns (address);
 
     /**
      * @dev Performs the token migration.

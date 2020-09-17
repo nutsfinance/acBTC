@@ -48,7 +48,7 @@ contract Vault is ERC20 {
     }
 
     /**
-     * @dev Updates the active strategy of the vault. The strategy must be valid, otherwise earn() will fail.
+     * @dev Updates the active strategy of the vault.
      */
     function setStrategy(address _strategy) public {
         require(msg.sender == governance, "Vault: Not governance");
