@@ -21,11 +21,11 @@ contract ACoconutExchange {
     /**
      * @dev New pool token is minted.
      */
-    event Minted(address indexed provider, uint256[] amounts, uint256 oldSupply, uint256 newSupply, uint256 fee);
+    event Minted(address indexed provider, uint256 mintAmount, uint256[] amounts, uint256 feeAmount);
     /**
      * @dev Pool token is redeemed.
      */
-    event Redeemed(address indexed provider, uint256[] amounts, uint256 oldSupply, uint256 newSupply, uint256 fee);
+    event Redeemed(address indexed provider, uint256 redeemAmount, uint256[] amounts, uint256 feeAmount);
 
     uint256 public constant feeDenominator = 10 ** 10;
     address[] public coins;
@@ -53,6 +53,7 @@ contract ACoconutExchange {
             balances.push(0);
         }
         require(_poolToken != address(0x0), "ACoconutExchange: pool token not set");
+        require(IPoolToken(_poolToken).decimals() == 18, "ACoconutExchange: Invalid decimal");
         require(_feeReceiver != address(0x0), "ACoconutExchange: fee receiver not set");
         coins = _coins;
         poolToken = _poolToken;
@@ -234,10 +235,12 @@ contract ACoconutExchange {
         // Transfer tokens into the swap
         for (i = 0; i < _amounts.length; i++) {
             if (_amounts[i] == 0)    continue;
+            // Update the balance in storage
+            balances[i] = _balances[i];
             IERC20(coins[i]).safeTransferFrom(msg.sender, address(this), _amounts[i]);
         }
 
-        emit Minted(msg.sender, _amounts, oldD, newD, feeAmount);
+        emit Minted(msg.sender, mintAmount, _amounts, feeAmount);
 
         return mintAmount;
     }
@@ -291,5 +294,46 @@ contract ACoconutExchange {
         if (_fee > 0) {
             feeAmount = dy.mul(fee).div(feeDenominator)
         }
+
+        return dy;
+    }
+
+    /**
+     * @dev Redeems pool token to underlying tokens proportionally. Redemption fee is charged with pool token if required.
+     * @param _amount Amount of pool token to redeem.
+     * @param _minAmounts Minimum amount of underlying tokens to get.
+     */
+    function redeem(uint256 _amount, uint256[] _minAmounts) external {
+        uint256[] _balances = balances;
+        require(_amount > 0, "ACoconutExchange: zero amount");
+        require(_balances.length == _minAmounts.length, "ACoconutExchange: invalid mins");
+
+        uint256 A = getA();
+        uint256 D = _getD(_balances, A);
+        uint256 amounts = uint256[](_balances.length);
+        uint256 fee = redemptionFee;
+        uint256 feeAmount;
+        if (fee > 0) {
+            feeAmount = _amount.mul(fee).div(feeDenominator);
+            // Redemption fee is paid with pool token
+            // No conversion is needed as the pool token has 18 decimals
+            IPoolToken(poolToken).safeTransferFrom(msg.sender, feeReceiver, feeAmount);
+            _amount = _amount.sub(feeAmount);
+        }
+
+        for (uint256 i = 0; i < _balances.length; i++) {
+            // We might choose to use poolToken.totalSupply to compute the amount, but decide to use
+            // D in case we have multiple minters on the pool token.
+            amounts[i] = _balances[i].mul(_amount).div(D);
+            require(amounts[i] >= _minAmounts[i], "ACoconutExchange: fewer than expected");
+            // Updates the balance in storage
+            balances[i] = _balances[i].sub(amounts[i]);
+            // Important: Underlying tokens must convert back to original decimals!
+            IERC20(coins[i]).safeTransfer(msg.sender, amounts[i].div(precisions[i]));
+        }
+
+        IPoolToken(poolToken).burn(msg.sender, _amount);
+
+        emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
     }
 }
