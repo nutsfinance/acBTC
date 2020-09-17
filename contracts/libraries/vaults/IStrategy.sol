@@ -34,5 +34,5 @@ interface IStrategy {
     /**
      * @dev Claims CRV from Curve and convert it back to renCRV.
      */
-    function harvest() external returns (uint256);
+    function harvest() external;
 }
