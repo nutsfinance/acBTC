@@ -85,6 +85,8 @@ contract ACoconutSwap {
 
     /**
      * @dev Computes D given token balances and amplification coefficient.
+     * @param _balances Balance of each token.
+     * @param _A Amplification coefficient from getA()
      */
     function _getD(uint256[] memory _balances, uint256 _A) internal pure returns (uint256) {
         uint256 sum = 0;
@@ -112,6 +114,10 @@ contract ACoconutSwap {
         }
 
         return D;
+    }
+
+    function _getY(uint256[] memory _balances, uint256 j, uint256 D) internal view returns (uint256) {
+
     }
 
     function getMintAmount(uint256[] memory amounts) public view returns (uint256) {
