@@ -17,7 +17,7 @@ contract ACoconutExchange {
     /**
      * @dev Token exchanged between two underlying tokens.
      */
-    event TokenExchanged(address indexed buyer, address indexed tokenSold, address indexed tokenBought, uint256 amountSold, uint256 amountBought, uint256 fee);
+    event TokenExchanged(address indexed buyer, address indexed tokenSold, address indexed tokenBought, uint256 amountSold, uint256 amountBought);
     /**
      * @dev New pool token is minted.
      */
@@ -46,14 +46,14 @@ contract ACoconutExchange {
     bool public terminated;
 
     constructor(address[] memory _coins, uint256[] memory _precisions, address _poolToken, address _feeReceiver, uint256 _A, uint256 _fee, uint256 _redemptionFee) public {
-        require(_coins.length == _precisions.length, "ACoconutSwap: input mismatch");
+        require(_coins.length == _precisions.length, "ACoconutExchange: input mismatch");
         for (uint256 i = 0; i < _coins.length; i++) {
-            require(_coins[i] != address(0x0), "ACoconutSwap: token not set");
-            require(_precisions[i] != 0, "ACoconutSwap: precision not set");
+            require(_coins[i] != address(0x0), "ACoconutExchange: token not set");
+            require(_precisions[i] != 0, "ACoconutExchange: precision not set");
             balances.push(0);
         }
-        require(_poolToken != address(0x0), "ACoconutSwap: pool token not set");
-        require(_feeReceiver != address(0x0), "ACoconutSwap: fee receiver not set");
+        require(_poolToken != address(0x0), "ACoconutExchange: pool token not set");
+        require(_feeReceiver != address(0x0), "ACoconutExchange: fee receiver not set");
         coins = _coins;
         poolToken = _poolToken;
         feeReceiver = _feeReceiver;
@@ -166,7 +166,7 @@ contract ACoconutExchange {
      * @return The amount of pool token minted.
      */
     function getMintAmount(uint256[] memory _amounts) public view returns (uint256) {
-        require(_amounts.length == balances.length, "ACoconutSwap: length not match");
+        require(_amounts.length == balances.length, "ACoconutExchange: length not match");
         uint256[] memory _balances = balances;
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
@@ -186,7 +186,7 @@ contract ACoconutExchange {
      * @return The amount of pool token that needs to be burned.
      */
     function getRedemptionAmount(uint256[] memory _amounts) public view returns (uint256) {
-        require(_amounts.length == balances.length, "ACoconutSwap: length not match");
+        require(_amounts.length == balances.length, "ACoconutExchange: length not match");
         uint256[] memory _balances = balances;
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
@@ -207,7 +207,7 @@ contract ACoconutExchange {
      */
     function mint(uint256[] memory _amounts) public returns (uint256) {
         uint256[] memory _balances = balances;
-        require(!paused && !terminated, "ACoconutSwap: paused");
+        require(!paused && !terminated, "ACoconutExchange: paused");
         require(_balances.length == _amounts.length, "ACoconutExchange: invalid amounts");
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
@@ -216,7 +216,7 @@ contract ACoconutExchange {
         for (i = 0; i < _balances.length; i++) {
             if (oldD == 0) {
                 // Initial deposit rquires all tokens provided!
-                require(_amounts[i] > 0, "ACoconutSwap: zero amount");
+                require(_amounts[i] > 0, "ACoconutExchange: zero amount");
                 _balances[i] = _balances[i].add(_amounts[i].mul(precisions[i]));
             }
         }
@@ -255,12 +255,13 @@ contract ACoconutExchange {
         uint256 D = _getD(_balances, A);
         _balances[_i] = _balances[_i].add(_dx.mul(precisions[_i]));
         uint256 y = _getY(_balances, _j, D, A);
+        uint256 dy = _balances[_j].sub(y).sub(1).div(precisions[_j]);
 
         if (fee > 0) {
-            y = y.sub(y.mul(fee).div(feeDenominator));
+            dy = dy.sub(dy.mul(fee).div(feeDenominator));
         }
 
-        return _balances[_j].sub(y).sub(1).div(precisions[_j]);
+        return dy;
     }
 
     /**
@@ -272,6 +273,23 @@ contract ACoconutExchange {
      * @return Unconverted amount of token _j to exchange out.
      */
     function exchange(uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external returns (uint256) {
+        uint256[] _balances = balances;
+        require(!paused && !terminated, "ACoconutExchange: paused");
+        require(_i != _j, "ACoconutExchange: Same token");
+        require(_i < _balances.length, "ACoconutExchange: Invalid in token");
+        require(_j < _balances.length, "ACoconutExchange: Invalid out token");
+        require(_dx > 0, "ACoconutExchange: Invalid in amount");
 
+        uint256 A = getA();
+        uint256 D = _getD(_balances, A);
+        _balances[_i] = _balances[_i].add(_dx.mul(precisions[_i]));
+        uint256 y = _getY(_balances, _j, D, A);
+        uint256 dy = _balances[_j].sub(y).sub(1);   // In case there was rounding errors
+
+        uint256 _fee = fee;
+        uint256 feeAmount = 0;
+        if (_fee > 0) {
+            feeAmount = dy.mul(fee).div(feeDenominator)
+        }
     }
 }
