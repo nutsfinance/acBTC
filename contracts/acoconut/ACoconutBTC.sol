@@ -3,10 +3,12 @@ pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+import "./IPoolToken.sol";
+
 /**
  * @dev ACoconut BTC token.
  */
-contract ACoconutBTC is ERC20 {
+contract ACoconutBTC is ERC20, IPoolToken {
     
     address governance;
     mapping(address => bool) minters;
@@ -28,12 +30,12 @@ contract ACoconutBTC is ERC20 {
         minters[user] = allowed;
     }
 
-    function mint(address user, uint256 amount) public {
+    function mint(address user, uint256 amount) public override {
         require(minters[msg.sender], "ACoconutBTC: not minter");
         _mint(user, amount);
     }
 
-    function burn(address user, uint256 amount) public {
+    function burn(address user, uint256 amount) public override {
         require(minters[msg.sender], "ACoconutBTC: not minter");
         _burn(user, amount);
     }
