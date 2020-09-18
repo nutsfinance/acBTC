@@ -26,6 +26,10 @@ contract ACoconutExchange {
      * @dev Pool token is redeemed.
      */
     event Redeemed(address indexed provider, uint256 redeemAmount, uint256[] amounts, uint256 feeAmount);
+    /**
+     * @dev Fee is collected.
+     */
+    event FeeCollected(address indexed feeRecipient, uint256 feeAmount);
 
     uint256 public constant feeDenominator = 10 ** 10;
     address[] public tokens;
@@ -499,5 +503,26 @@ contract ACoconutExchange {
         }
 
         emit Redeemed(msg.sender, redeemAmount, _amounts, feeAmount);
+    }
+
+    /**
+     * @dev Collect fee based on the token balance difference.
+     */
+    function collectFees() external {
+        uint256[] memory _balances = balances;
+        uint256 A = getA();
+        uint256 oldD = _getD(_balances, A);
+
+        for (uint256 i = 0; i < _balances.length; i++) {
+            _balances[i] = IERC20(tokens[i]).balanceOf(address(this));
+        }
+        uint256 newD = _getD(_balances, A);
+        uint256 feeAmount = newD.sub(oldD);
+        if (feeAmount == 0) return;
+
+        address _feeRecipient = feeRecipient;
+        IPoolToken(poolToken).mint(_feeRecipient, feeAmount);
+
+        emit FeeCollected(_feeRecipient, feeAmount);
     }
 }
