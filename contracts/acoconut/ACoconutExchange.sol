@@ -28,12 +28,13 @@ contract ACoconutExchange {
     event Redeemed(address indexed provider, uint256 redeemAmount, uint256[] amounts, uint256 feeAmount);
 
     uint256 public constant feeDenominator = 10 ** 10;
-    address[] public coins;
+    address[] public tokens;
     uint256[] public precisions; // 10 ** (18 - token decimals)
-    uint256[] public balances;  // Converted to 10 ** 18
-    uint256 public fee;     // Mint/Swap fee * 10**10
-    uint256 public redemptionFee; // Redemption fee * 10**10
-    address public feeReceiver;
+    uint256[] public balances; // Converted to 10 ** 18
+    uint256 public mintFee; // Mint fee * 10**10
+    uint256 public swapFee; // Swap fee * 10**10
+    uint256 public redeemFee; // Redeem fee * 10**10
+    address public feeRecipient;
     address public governance;
     address public poolToken;
 
@@ -45,23 +46,26 @@ contract ACoconutExchange {
     bool public paused;
     bool public terminated;
 
-    constructor(address[] memory _coins, uint256[] memory _precisions, address _poolToken, address _feeReceiver, uint256 _A, uint256 _fee, uint256 _redemptionFee) public {
-        require(_coins.length == _precisions.length, "ACoconutExchange: input mismatch");
-        for (uint256 i = 0; i < _coins.length; i++) {
-            require(_coins[i] != address(0x0), "ACoconutExchange: token not set");
-            require(_precisions[i] != 0, "ACoconutExchange: precision not set");
+    constructor(address[] memory _tokens, uint256[] memory _precisions, uint256[] memory _fees,
+        address _poolToken, address _feeRecipient, uint256 _A) public {
+        require(_tokens.length == _precisions.length, "input mismatch");
+        require(_fees.length == 3, "no fees");
+        for (uint256 i = 0; i < _tokens.length; i++) {
+            require(_tokens[i] != address(0x0), "token not set");
+            require(_precisions[i] != 0, "precision not set");
             balances.push(0);
         }
-        require(_poolToken != address(0x0), "ACoconutExchange: pool token not set");
-        require(IPoolToken(_poolToken).decimals() == 18, "ACoconutExchange: Invalid decimal");
-        require(_feeReceiver != address(0x0), "ACoconutExchange: fee receiver not set");
-        coins = _coins;
+        require(_poolToken != address(0x0), "pool token not set");
+        require(_feeRecipient != address(0x0), "fee receiver not set");
+
+        tokens = _tokens;
         poolToken = _poolToken;
-        feeReceiver = _feeReceiver;
+        feeRecipient = _feeRecipient;
         initialA = _A;
         futureA = _A;
-        fee = _fee;
-        redemptionFee = _redemptionFee;
+        mintFee = _fees[0];
+        swapFee = _fees[1];
+        redeemFee = _fees[2];
     }
 
     /**
@@ -166,83 +170,72 @@ contract ACoconutExchange {
      * @param _amounts Unconverted token balances.
      * @return The amount of pool token minted.
      */
-    function getMintAmount(uint256[] memory _amounts) public view returns (uint256) {
-        require(_amounts.length == balances.length, "ACoconutExchange: length not match");
+    function getMintAmount(uint256[] calldata _amounts) external view returns (uint256) {
         uint256[] memory _balances = balances;
+        require(_amounts.length == _balances.length, "invalid amount");
+        
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
-        for (uint256 i = 0; i < _balances.length; i++) {
+        uint256 i = 0;
+        for (i = 0; i < _balances.length; i++) {
+            if (_amounts[i] == 0)   continue;
             // balance = balance + amount * precision
             _balances[i] = _balances[i].add(_amounts[i].mul(precisions[i]));
         }
         uint256 newD = _getD(_balances, A);
-
         // newD should be bigger than or equal to oldD
-        return newD.sub(oldD);
-    }
+        uint256 mintAmount = newD.sub(oldD);
 
-    /**
-     * @dev Compute the amount of pool token that needs to be burned.
-     * @param _amounts Unconverted token balances.
-     * @return The amount of pool token that needs to be burned.
-     */
-    function getRedemptionAmount(uint256[] memory _amounts) public view returns (uint256) {
-        require(_amounts.length == balances.length, "ACoconutExchange: length not match");
-        uint256[] memory _balances = balances;
-        uint256 A = getA();
-        uint256 oldD = _getD(_balances, A);
-        for (uint256 i = 0; i < _balances.length; i++) {
-            // balance = balance + amount * precision
-            _balances[i] = _balances[i].sub(_amounts[i].mul(precisions[i]));
+        if (mintFee > 0) {
+            mintAmount = mintAmount.sub(mintAmount.mul(mintFee).div(feeDenominator));
         }
-        uint256 newD = _getD(_balances, A);
 
-        // newD should be smaller than or equal to oldD
-        return oldD.sub(newD);
+        return mintAmount;
     }
 
     /**
      * @dev Mints new pool token.
      * @param _amounts Unconverted token balances used to mint pool token.
-     * @return Amount of pool token minted.
+     * @param _minMintAmount Minimum amount of pool token to mint.
      */
-    function mint(uint256[] memory _amounts) public returns (uint256) {
+    function mint(uint256[] calldata _amounts, uint256 _minMintAmount) external {
         uint256[] memory _balances = balances;
-        require(!paused && !terminated, "ACoconutExchange: paused");
-        require(_balances.length == _amounts.length, "ACoconutExchange: invalid amounts");
+        require(!paused && !terminated, "paused");
+        require(_balances.length == _amounts.length, "invalid amounts");
+
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
         uint256 i = 0;
-
         for (i = 0; i < _balances.length; i++) {
             if (oldD == 0) {
                 // Initial deposit rquires all tokens provided!
-                require(_amounts[i] > 0, "ACoconutExchange: zero amount");
-                _balances[i] = _balances[i].add(_amounts[i].mul(precisions[i]));
+                require(_amounts[i] > 0, "zero amount");
             }
+            _balances[i] = _balances[i].add(_amounts[i].mul(precisions[i]));
         }
         uint256 newD = _getD(_balances, A);
+        // newD should be bigger than or equal to oldD
         uint256 mintAmount = newD.sub(oldD);
+
+        uint256 fee = mintFee;
         uint256 feeAmount;
-        uint256 _fee = fee;
-        if (_fee > 0) {
-            feeAmount = mintAmount.mul(_fee).div(feeDenominator);
-            IPoolToken(poolToken).mint(feeReceiver, feeAmount);
+        if (fee > 0) {
+            feeAmount = mintAmount.mul(fee).div(feeDenominator);
             mintAmount = mintAmount.sub(feeAmount);
         }
-        IPoolToken(poolToken).mint(msg.sender, mintAmount);
+        require(mintAmount >= _minMintAmount, "fewer than expected");
 
         // Transfer tokens into the swap
         for (i = 0; i < _amounts.length; i++) {
             if (_amounts[i] == 0)    continue;
             // Update the balance in storage
             balances[i] = _balances[i];
-            IERC20(coins[i]).safeTransferFrom(msg.sender, address(this), _amounts[i]);
+            IERC20(tokens[i]).safeTransferFrom(msg.sender, address(this), _amounts[i]);
         }
+        IPoolToken(poolToken).mint(feeRecipient, feeAmount);
+        IPoolToken(poolToken).mint(msg.sender, mintAmount);
 
         emit Minted(msg.sender, mintAmount, _amounts, feeAmount);
-
-        return mintAmount;
     }
 
     /**
@@ -252,16 +245,23 @@ contract ACoconutExchange {
      * @param _dx Unconverted amount of token _i to exchange in.
      * @return Unconverted amount of token _j to exchange out.
      */
-    function getDy(uint256 _i, uint256 _j, uint256 _dx) external view returns (uint256) {
+    function getExchangeAmount(uint256 _i, uint256 _j, uint256 _dx) external view returns (uint256) {
         uint256[] memory _balances = balances;
+        require(_i != _j, "same token");
+        require(_i < _balances.length, "invalid in");
+        require(_j < _balances.length, "invalid out");
+        require(_dx > 0, "invalid amount");
+
         uint256 A = getA();
         uint256 D = _getD(_balances, A);
+        // balance[i] = balance[i] + dx * precisions[i]
         _balances[_i] = _balances[_i].add(_dx.mul(precisions[_i]));
         uint256 y = _getY(_balances, _j, D, A);
+        // dy = (balance[j] - y - 1) / precisions[j] in case there was rounding errors
         uint256 dy = _balances[_j].sub(y).sub(1).div(precisions[_j]);
 
-        if (fee > 0) {
-            dy = dy.sub(dy.mul(fee).div(feeDenominator));
+        if (swapFee > 0) {
+            dy = dy.sub(dy.mul(swapFee).div(feeDenominator));
         }
 
         return dy;
@@ -273,67 +273,231 @@ contract ACoconutExchange {
      * @param _j Token index to exchange out.
      * @param _dx Unconverted amount of token _i to exchange in.
      * @param _minDy Minimum token _j to exchange out in converted balance.
-     * @return Unconverted amount of token _j to exchange out.
      */
-    function exchange(uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external returns (uint256) {
-        uint256[] _balances = balances;
-        require(!paused && !terminated, "ACoconutExchange: paused");
-        require(_i != _j, "ACoconutExchange: Same token");
-        require(_i < _balances.length, "ACoconutExchange: Invalid in token");
-        require(_j < _balances.length, "ACoconutExchange: Invalid out token");
-        require(_dx > 0, "ACoconutExchange: Invalid in amount");
+    function exchange(uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external {
+        uint256[] memory _balances = balances;
+        require(!paused && !terminated, "paused");
+        require(_i != _j, "same token");
+        require(_i < _balances.length, "invalid in");
+        require(_j < _balances.length, "invalid out");
+        require(_dx > 0, "invalid amount");
 
         uint256 A = getA();
         uint256 D = _getD(_balances, A);
+        // balance[i] = balance[i] + dx * precisions[i]
         _balances[_i] = _balances[_i].add(_dx.mul(precisions[_i]));
         uint256 y = _getY(_balances, _j, D, A);
-        uint256 dy = _balances[_j].sub(y).sub(1);   // In case there was rounding errors
+        // dy = (balance[j] - y - 1) / precisions[j] in case there was rounding errors
+        uint256 dy = _balances[_j].sub(y).sub(1).div(precisions[_j]);
+        // Update token balance in storage
+        balances[_j] = y;
 
-        uint256 _fee = fee;
-        uint256 feeAmount = 0;
-        if (_fee > 0) {
-            feeAmount = dy.mul(fee).div(feeDenominator)
+        uint256 fee = swapFee;
+        if (fee > 0) {
+            dy = dy.sub(dy.mul(fee).div(feeDenominator));
         }
+        require(dy >= _minDy, "fewer than expected");
+        // Important: When swap fee > 0, the swap fee is charged on the output token.
+        // Therefore, balances[j] < tokens[j].balanceOf(this)
+        // Since balances[j] is used to compute D, D is unchanged.
+        // collectFees() is used to convert the difference between balances[j] and tokens[j].balanceOf(this)
+        // into pool token as fees!
+        IERC20(tokens[_j]).safeTransfer(msg.sender, dy);
 
-        return dy;
+        emit TokenExchanged(msg.sender, tokens[_i], tokens[_j], _dx, dy);
     }
 
     /**
-     * @dev Redeems pool token to underlying tokens proportionally. Redemption fee is charged with pool token if required.
-     * @param _amount Amount of pool token to redeem.
-     * @param _minAmounts Minimum amount of underlying tokens to get.
+     * @dev Computes the amounts of underlying tokens when redeeming pool token.
+     * @param _amount Amount of pool tokens to redeem.
+     * @return Amounts of underlying tokens redeemed.
      */
-    function redeem(uint256 _amount, uint256[] _minAmounts) external {
-        uint256[] _balances = balances;
-        require(_amount > 0, "ACoconutExchange: zero amount");
-        require(_balances.length == _minAmounts.length, "ACoconutExchange: invalid mins");
+    function getRedeemAmount(uint256 _amount) external view returns (uint256[] memory) {
+        uint256[] memory _balances = balances;
+        require(_amount > 0, "zero amount");
 
         uint256 A = getA();
         uint256 D = _getD(_balances, A);
-        uint256 amounts = uint256[](_balances.length);
-        uint256 fee = redemptionFee;
-        uint256 feeAmount;
-        if (fee > 0) {
-            feeAmount = _amount.mul(fee).div(feeDenominator);
-            // Redemption fee is paid with pool token
-            // No conversion is needed as the pool token has 18 decimals
-            IPoolToken(poolToken).safeTransferFrom(msg.sender, feeReceiver, feeAmount);
-            _amount = _amount.sub(feeAmount);
+        uint256[] memory amounts = new uint256[](_balances.length);
+        if (redeemFee > 0) {
+            // Redemption fee is charged with pool token before redemption.
+            _amount = _amount.sub(_amount.mul(redeemFee).div(feeDenominator));
         }
 
         for (uint256 i = 0; i < _balances.length; i++) {
             // We might choose to use poolToken.totalSupply to compute the amount, but decide to use
             // D in case we have multiple minters on the pool token.
             amounts[i] = _balances[i].mul(_amount).div(D);
-            require(amounts[i] >= _minAmounts[i], "ACoconutExchange: fewer than expected");
-            // Updates the balance in storage
-            balances[i] = _balances[i].sub(amounts[i]);
+        }
+
+        return amounts;
+    }
+
+    /**
+     * @dev Redeems pool token to underlying tokens proportionally.
+     * @param _amount Amount of pool token to redeem.
+     * @param _minRedeemAmounts Minimum amount of underlying tokens to get.
+     */
+    function redeem(uint256 _amount, uint256[] calldata _minRedeemAmounts) external {
+        uint256[] memory _balances = balances;
+        require(!paused && !terminated, "paused");
+        require(_amount > 0, "zero amount");
+        require(_balances.length == _minRedeemAmounts.length, "invalid mins");
+
+        uint256 A = getA();
+        uint256 D = _getD(_balances, A);
+        uint256[] memory amounts = new uint256[](_balances.length);
+        uint256 fee = redeemFee;
+        uint256 feeAmount;
+        if (fee > 0) {
+            feeAmount = _amount.mul(fee).div(feeDenominator);
+            // Redemption fee is paid with pool token
+            // No conversion is needed as the pool token has 18 decimals
+            IERC20(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
+            _amount = _amount.sub(feeAmount);
+        }
+
+        for (uint256 i = 0; i < _balances.length; i++) {
+            // We might choose to use poolToken.totalSupply to compute the amount, but decide to use
+            // D in case we have multiple minters on the pool token.
+            uint256 tokenAmount = _balances[i].mul(_amount).div(D);
             // Important: Underlying tokens must convert back to original decimals!
-            IERC20(coins[i]).safeTransfer(msg.sender, amounts[i].div(precisions[i]));
+            amounts[i] = tokenAmount.div(precisions[i]);
+            require(amounts[i] >= _minRedeemAmounts[i], "fewer than expected");
+            // Updates the balance in storage
+            balances[i] = _balances[i].sub(tokenAmount);
+            IERC20(tokens[i]).safeTransfer(msg.sender, amounts[i]);
         }
 
         IPoolToken(poolToken).burn(msg.sender, _amount);
 
         emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
+    }
+
+    /**
+     * @dev Computes the amount when redeeming pool token to one specific underlying token.
+     * @param _amount Amount of pool token to redeem.
+     * @param _i Index of the underlying token to redeem to.
+     * @return Amount of underlying token that can be redeem to.
+     */
+    function getRedeemAmount(uint256 _amount, uint256 _i) external view returns (uint256) {
+        uint256[] memory _balances = balances;
+        require(_amount > 0, "zero amount");
+        require(_i < _balances.length, "invalid token");
+
+        uint256 A = getA();
+        uint256 D = _getD(_balances, A);
+        if (redeemFee > 0) {
+            // Redemption fee is charged with pool token before redemption.
+            _amount = _amount.sub(_amount.mul(redeemFee).div(feeDenominator));
+        }
+        uint256 y = _getY(_balances, _i, D.sub(_amount), A);
+
+        return _balances[_i].sub(y).div(precisions[_i]);
+    }
+
+    /**
+     * @dev Redeem pool token to one specific underlying token.
+     * @param _amount Amount of pool token to redeem.
+     * @param _i Index of the token to redeem to.
+     * @param _minRedeemAmount Minimum amount of the underlying token to redeem to.
+     */
+    function redeem(uint256 _amount, uint256 _i, uint256 _minRedeemAmount) external {
+        uint256[] memory _balances = balances;
+        require(!paused && !terminated, "paused");
+        require(_amount > 0, "zero amount");
+        require(_i < _balances.length, "invalid token");
+
+        uint256 A = getA();
+        uint256 D = _getD(_balances, A);
+        uint256 fee = redeemFee;
+        uint256 feeAmount = 0;
+        if (fee > 0) {
+            // Redemption fee is charged with pool token before redemption.
+            feeAmount = _amount.mul(fee).div(feeDenominator);
+            // No conversion is needed as the pool token has 18 decimals
+            IERC20(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
+            _amount = _amount.sub(feeAmount);
+        }
+
+        uint256 y = _getY(_balances, _i, D.sub(_amount), A);
+        uint256 dy = _balances[_i].sub(y).div(precisions[_i]);
+        require(dy >= _minRedeemAmount, "fewer than expected");
+        // Updates token balance in storage
+        balances[_i] = y;
+        uint256[] memory amounts = new uint256[](_balances.length);
+        amounts[_i] = dy;
+
+        IERC20(tokens[_i]).safeTransfer(msg.sender, dy);
+        IPoolToken(poolToken).burn(msg.sender, _amount.add(feeAmount));
+
+        emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
+    }
+
+    /**
+     * @dev Compute the amount of pool token that needs to be redeemed.
+     * @param _amounts Unconverted token balances.
+     * @return The amount of pool token that needs to be redeemed.
+     */
+    function getRedeemTokensAmount(uint256[] calldata _amounts) external view returns (uint256) {
+        uint256[] memory _balances = balances;
+        require(_amounts.length == balances.length, "length not match");
+        
+        uint256 A = getA();
+        uint256 oldD = _getD(_balances, A);
+        for (uint256 i = 0; i < _balances.length; i++) {
+            if (_amounts[i] == 0)   continue;
+            // balance = balance + amount * precision
+            _balances[i] = _balances[i].sub(_amounts[i].mul(precisions[i]));
+        }
+        uint256 newD = _getD(_balances, A);
+
+        // newD should be smaller than or equal to oldD
+        uint256 redeemAmount = oldD.sub(newD);
+        if (redeemFee > 0) {
+            redeemAmount = redeemAmount.mul(feeDenominator).div(feeDenominator.sub(redeemFee));
+        }
+
+        return redeemAmount;
+    }
+
+    /**
+     * @dev Redeems underlying tokens.
+     * @param _amounts Amounts of underlying tokens to redeem to.
+     * @param _maxRedeemAmount Maximum of pool token to redeem.
+     */
+    function redeemTokens(uint256[] calldata _amounts, uint256 _maxRedeemAmount) external {
+        uint256[] memory _balances = balances;
+        require(_amounts.length == balances.length, "length not match");
+        
+        uint256 A = getA();
+        uint256 oldD = _getD(_balances, A);
+        uint256 i = 0;
+        for (i = 0; i < _balances.length; i++) {
+            if (_amounts[i] == 0)   continue;
+            // balance = balance + amount * precision
+            _balances[i] = _balances[i].sub(_amounts[i].mul(precisions[i]));
+        }
+        uint256 newD = _getD(_balances, A);
+
+        // newD should be smaller than or equal to oldD
+        uint256 redeemAmount = oldD.sub(newD);
+        uint256 fee = redeemFee;
+        uint256 feeAmount = 0;
+        if (fee > 0) {
+            redeemAmount = redeemAmount.mul(feeDenominator).div(feeDenominator.sub(fee));
+            feeAmount = redeemAmount.sub(oldD.sub(newD));
+        }
+        require(redeemAmount <= _maxRedeemAmount, "more than expected");
+
+        // Updates token balances in storage.
+        balances = _balances;
+        IPoolToken(poolToken).burn(msg.sender, redeemAmount);
+        for (i = 0; i < _balances.length; i++) {
+            if (_amounts[i] == 0)   continue;
+            IERC20(tokens[i]).safeTransfer(msg.sender, _amounts[i]);
+        }
+
+        emit Redeemed(msg.sender, redeemAmount, _amounts, feeAmount);
     }
 }
