@@ -473,6 +473,7 @@ contract ACoconutExchange {
     function redeemTokens(uint256[] calldata _amounts, uint256 _maxRedeemAmount) external {
         uint256[] memory _balances = balances;
         require(_amounts.length == balances.length, "length not match");
+        require(!paused && !terminated, "paused");
         
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
@@ -524,5 +525,112 @@ contract ACoconutExchange {
         IPoolToken(poolToken).mint(_feeRecipient, feeAmount);
 
         emit FeeCollected(_feeRecipient, feeAmount);
+    }
+
+    /**
+     * @dev Updates the govenance address.
+     */
+    function setGovernance(address _governance) external {
+        require(msg.sender == governance, "not governance");
+        governance = _governance;
+    }
+
+    /**
+     * @dev Updates the mint fee.
+     */
+    function setMintFee(uint256 _mintFee) external {
+        require(msg.sender == governance, "not governance");
+        mintFee = _mintFee;
+    }
+
+    /**
+     * @dev Updates the swap fee.
+     */
+    function setSwapFee(uint256 _swapFee) external {
+        require(msg.sender == governance, "not governance");
+        swapFee = _swapFee;
+    }
+
+    /**
+     * @dev Updates the redeem fee.
+     */
+    function setRedeemFee(uint256 _redeemFee) external {
+        require(msg.sender == governance, "not governance");
+        redeemFee = _redeemFee;
+    }
+
+    /**
+     * @dev Updates the recipient of mint/swap/redeem fees.
+     */
+    function setFeeRecipient(address _feeRecipient) external {
+        require(msg.sender == governance, "not governance");
+        require(_feeRecipient != address(0x0), "fee recipient not set");
+        feeRecipient = _feeRecipient;
+    }
+
+    /**
+     * @dev Updates the pool token.
+     */
+    function setPoolToken(address _poolToken) external {
+        require(msg.sender == governance, "not governance");
+        require(_poolToken != address(0x0), "pool token not set");
+        poolToken = _poolToken;
+    }
+
+    /**
+     * @dev Updates the amplicification coefficient.
+     */
+    function rampA(uint256 _futureA, uint256 _futureATimestamp) external {
+        require(msg.sender == governance, "not governance");
+        require(_futureATimestamp > block.timestamp, "too early");
+
+        initialA = getA();
+        futureA = _futureA;
+        initialATimestamp = block.timestamp;
+        futureATimestamp = _futureATimestamp;
+    }
+
+    /**
+     * @dev Stops the ramping process.
+     */
+    function stopRampA() external {
+        require(msg.sender == governance, "not governance");
+        uint256 A = getA();
+        initialA = A;
+        futureA = A;
+        initialATimestamp = block.timestamp;
+        futureATimestamp = block.timestamp;
+    }
+
+    /**
+     * @dev Pause mint/swap/redeem actions. Can unpause later.
+     */
+    function pause() external {
+        require(msg.sender == governance, "not governance");
+        require(!paused, "paused");
+        require(!terminated, "terminated");
+
+        paused = true;
+    }
+
+    /**
+     * @dev Unpause mint/swap/redeem actions.
+     */
+    function unpause() external {
+        require(msg.sender == governance, "not governance");
+        require(paused, "not paused");
+        require(!terminated, "terminated");
+
+        paused = false;
+    }
+
+    /**
+     * @dev Terminate mint/swap/redeem actions.
+     */
+    function terminate() external {
+        require(msg.sender == governance, "not governance");
+        require(!terminated, "terminated");
+
+        terminated = true;
     }
 }
