@@ -23,6 +23,8 @@ contract AccountFactory {
      * @param _accountBase Base account implementation.
      */
     constructor(address _accountBase) public {
+        require(_accountBase != address(0x0), "account base not set");
+        governance = msg.sender;
         accountBase = _accountBase;
     }
 
