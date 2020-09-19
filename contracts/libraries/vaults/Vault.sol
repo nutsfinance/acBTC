@@ -43,7 +43,7 @@ contract Vault is ERC20 {
      * @dev Updates the govenance address.
      */
     function setGovernance(address _governance) public {
-        require(msg.sender == governance, "Vault: Not governance");
+        require(msg.sender == governance, "not governance");
         governance = _governance;
     }
 
@@ -51,8 +51,8 @@ contract Vault is ERC20 {
      * @dev Updates the active strategy of the vault.
      */
     function setStrategy(address _strategy) public {
-        require(msg.sender == governance, "Vault: Not governance");
-        require(address(token) == IStrategy(_strategy).want(), "Vault: Different token");
+        require(msg.sender == governance, "not governance");
+        require(address(token) == IStrategy(_strategy).want(), "different token");
 
         // If the vault has an existing strategy, withdraw all funds from it.
         if (strategy != address(0x0)) {
@@ -68,7 +68,7 @@ contract Vault is ERC20 {
      * @dev Starts earning and deposits all current balance into strategy.
      */
     function earn() public {
-        require(strategy != address(0x0), "Vault: No strategy");
+        require(strategy != address(0x0), "no strategy");
         uint256 _bal = token.balanceOf(address(this));
         token.safeTransfer(strategy, _bal);
         IStrategy(strategy).deposit();
@@ -85,7 +85,7 @@ contract Vault is ERC20 {
      * @dev Deposit some balance to the vault.
      */
     function deposit(uint256 _amount) public virtual {
-        require(_amount > 0, "Vault: Can not deposit 0");
+        require(_amount > 0, "zero amount");
         uint256 _pool = balance();
         uint256 _before = token.balanceOf(address(this));
         token.safeTransferFrom(msg.sender, address(this), _amount);
@@ -113,7 +113,7 @@ contract Vault is ERC20 {
      * @dev Withdraws some balance out of the vault.
      */
     function withdraw(uint256 _shares) public virtual {
-        require(_shares > 0, "Vault: Can not withdraw 0");
+        require(_shares > 0, "zero amount");
         uint256 r = (balance().mul(_shares)).div(totalSupply());
         _burn(msg.sender, _shares);
 
@@ -122,7 +122,7 @@ contract Vault is ERC20 {
         if (b < r) {
             uint256 _withdraw = r.sub(b);
             // Ideally this should not happen. Put here for extra safety.
-            require(strategy != address(0x0), "Vault: No strategy");
+            require(strategy != address(0x0), "no strategy");
             IStrategy(strategy).withdraw(_withdraw);
             uint256 _after = token.balanceOf(address(this));
             uint256 _diff = _after.sub(b);
@@ -141,8 +141,8 @@ contract Vault is ERC20 {
      * @param _amount Amount of token to salvage.
      */
     function salvage(address _tokenAddress, uint256 _amount) public {
-        require(msg.sender == governance, "Vault: Not governance");
-        require(_tokenAddress != address(token), "Vault: Cannot salvage vault token");
+        require(msg.sender == governance, "not governance");
+        require(_tokenAddress != address(token), "cannot salvage");
         IERC20(_tokenAddress).safeTransfer(governance, _amount);
     }
 
@@ -150,6 +150,7 @@ contract Vault is ERC20 {
      * @dev Returns the number of vault token per share is worth.
      */
     function getPricePerFullShare() public view returns (uint256) {
+        if (totalSupply() == 0) return 0;
         return balance().mul(1e18).div(totalSupply());
     }
 }

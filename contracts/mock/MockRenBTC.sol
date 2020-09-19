@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.6.8;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./MockToken.sol";
 
 /**
  * @notice Mock renBTC.
  */
-contract MockRenBTC is ERC20 {
+contract MockRenBTC is MockToken {
 
-    constructor() ERC20("Mock Ren BTC", "MockRenBTC") public {}
-
-    function mint(address account, uint256 amount) public {
-        _mint(account, amount);
-    }
+    constructor() MockToken("Mock Ren BTC", "MockRenBTC") public {}
 }

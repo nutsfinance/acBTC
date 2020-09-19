@@ -32,7 +32,7 @@ interface IStrategy {
     function withdrawAll() external returns (uint256);
     
     /**
-     * @dev Claims CRV from Curve and convert it back to renCRV.
+     * @dev Claims yield and convert it back to want token.
      */
     function harvest() external;
 }
