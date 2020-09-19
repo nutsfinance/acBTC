@@ -170,13 +170,12 @@ contract Account is Initializable {
 
     /**
      * @dev Allows the spender address to spend up to the amount of token.
-     * Caller of this method is expected to set allowance and then reset to 0 in the same transaction,
-     * so that the ERC20 approve attack is not an issue.
      * @param tokenAddress Address of the ERC20 that can spend.
      * @param targetAddress Address which can spend the ERC20.
      * @param amount Amount of ERC20 that can be spent by the target address.
      */
     function approveToken(address tokenAddress, address targetAddress, uint256 amount) public onlyOperator {
+        IERC20(tokenAddress).safeApprove(targetAddress, 0);
         IERC20(tokenAddress).safeApprove(targetAddress, amount);
         emit Approved(tokenAddress, targetAddress, amount);
     }
