@@ -21,22 +21,22 @@ contract ACoconutBTC is ERC20, IPoolToken {
      * @dev Updates the govenance address.
      */
     function setGovernance(address _governance) public {
-        require(msg.sender == governance, "ACoconutBTC: Not governance");
+        require(msg.sender == governance, "not governance");
         governance = _governance;
     }
 
-    function setMinter(address user, bool allowed) public {
-        require(msg.sender == governance, "ACoconutBTC: not governance");
-        minters[user] = allowed;
+    function setMinter(address _user, bool _allowed) public {
+        require(msg.sender == governance, "not governance");
+        minters[_user] = _allowed;
     }
 
-    function mint(address user, uint256 amount) public override {
-        require(minters[msg.sender], "ACoconutBTC: not minter");
-        _mint(user, amount);
+    function mint(address _user, uint256 _amount) public override {
+        require(minters[msg.sender], "not minter");
+        _mint(_user, _amount);
     }
 
-    function burn(address user, uint256 amount) public override {
-        require(minters[msg.sender], "ACoconutBTC: not minter");
-        _burn(user, amount);
+    function burn(address _user, uint256 _amount) public override {
+        require(minters[msg.sender], "not minter");
+        _burn(_user, _amount);
     }
 }

@@ -24,7 +24,7 @@ interface IStrategy {
     /**
      * @dev Withdraws partial funds from the strategy.
      */
-    function withdraw(uint256 amount) external;
+    function withdraw(uint256 _amount) external;
 
     /**
      * @dev Withdraws all funds from the strategy.

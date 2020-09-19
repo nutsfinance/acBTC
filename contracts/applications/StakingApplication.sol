@@ -28,7 +28,7 @@ contract StakingApplication {
     /**
      * @dev Retrieve the active account of the user.
      */
-    function _getAccount() internal returns (Account) {
+    function _getAccount() internal view returns (Account) {
         address _account = AccountFactory(accountFactory).getAccount(msg.sender);
         require(_account != address(0x0), "account not exist");
         Account account = Account(payable(_account));

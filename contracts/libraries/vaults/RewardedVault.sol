@@ -35,12 +35,12 @@ contract RewardedVault is Vault {
         rewardToken = IERC20(_rewardToken);
     }
 
-    modifier updateReward(address account) {
+    modifier updateReward(address _account) {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = lastTimeRewardApplicable();
-        if (account != address(0)) {
-            rewards[account] = earned(account);
-            userRewardPerTokenPaid[account] = rewardPerTokenStored;
+        if (_account != address(0)) {
+            rewards[_account] = earned(_account);
+            userRewardPerTokenPaid[_account] = rewardPerTokenStored;
         }
         _;
     }
@@ -63,16 +63,16 @@ contract RewardedVault is Vault {
             );
     }
 
-    function earned(address account) public view returns (uint256) {
+    function earned(address _account) public view returns (uint256) {
         return
-            balanceOf(account)
-                .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
+            balanceOf(_account)
+                .mul(rewardPerToken().sub(userRewardPerTokenPaid[_account]))
                 .div(1e18)
-                .add(rewards[account]);
+                .add(rewards[_account]);
     }
 
-    function deposit(uint256 amount) public virtual override updateReward(msg.sender) {
-        super.deposit(amount);
+    function deposit(uint256 _amount) public virtual override updateReward(msg.sender) {
+        super.deposit(_amount);
     }
 
     function depositAll() public virtual override updateReward(msg.sender) {
@@ -109,20 +109,21 @@ contract RewardedVault is Vault {
 
     /**
      * @dev Add new rewards to the vault. All rewards will be distributed linearly in 7 days.
+     * @param _reward Amount of reward token to add.
      */
-    function addRewardAmount(uint256 reward) public updateReward(address(0)) {
+    function addRewardAmount(uint256 _reward) public updateReward(address(0)) {
         require(msg.sender == governance, "RewardedVault: Not governance");
-        rewardToken.safeTransferFrom(msg.sender, address(this), reward);
+        rewardToken.safeTransferFrom(msg.sender, address(this), _reward);
 
         if (block.timestamp >= periodFinish) {
-            rewardRate = reward.div(DURATION);
+            rewardRate = _reward.div(DURATION);
         } else {
             uint256 remaining = periodFinish.sub(block.timestamp);
             uint256 leftover = remaining.mul(rewardRate);
-            rewardRate = reward.add(leftover).div(DURATION);
+            rewardRate = _reward.add(leftover).div(DURATION);
         }
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(DURATION);
-        emit RewardAdded(reward);
+        emit RewardAdded(_reward);
     }
 }

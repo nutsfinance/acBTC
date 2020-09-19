@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  */
 interface IPoolToken is IERC20 {
     
-    function mint(address user, uint256 amount) external;
+    function mint(address _user, uint256 _amount) external;
 
-    function burn(address user, uint256 amount) external;
+    function burn(address _user, uint256 _amount) external;
 }

@@ -137,11 +137,13 @@ contract Vault is ERC20 {
 
     /**
      * @dev Used to salvage any token deposited into the vault by mistake.
+     * @param _tokenAddress Token address to salvage.
+     * @param _amount Amount of token to salvage.
      */
-    function salvage(address tokenAddress, uint256 amount) public {
+    function salvage(address _tokenAddress, uint256 _amount) public {
         require(msg.sender == governance, "Vault: Not governance");
-        require(tokenAddress != address(token), "Vault: Cannot salvage vault token");
-        IERC20(tokenAddress).safeTransfer(governance, amount);
+        require(_tokenAddress != address(token), "Vault: Cannot salvage vault token");
+        IERC20(_tokenAddress).safeTransfer(governance, _amount);
     }
 
     /**

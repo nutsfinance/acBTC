@@ -52,36 +52,36 @@ contract ACoconut is ERC20 {
      * @dev Updates the govenance address.
      */
     function setGovernance(address _governance) public {
-        require(msg.sender == governance, "ACoconut: Not governance");
+        require(msg.sender == governance, "Not governance");
         governance = _governance;
     }
 
-    function setMinter(address user, bool allowed) public {
-        require(msg.sender == governance, "ACoconut: not governance");
-        minters[user] = allowed;
+    function setMinter(address _user, bool _allowed) public {
+        require(msg.sender == governance, "not governance");
+        minters[_user] = _allowed;
     }
 
-    function mint(address user, uint256 amount) public {
-        require(minters[msg.sender], "ACoconut: not minter");
-        _mint(user, amount);
-        _moveDelegates(address(0), _delegates[user], amount);
+    function mint(address _user, uint256 _amount) public {
+        require(minters[msg.sender], "not minter");
+        _mint(_user, _amount);
+        _moveDelegates(address(0), _delegates[_user], _amount);
     }
 
-    function burn(address user, uint256 amount) public {
-        require(minters[msg.sender], "ACoconut: not minter");
-        _burn(user, amount);
-        _moveDelegates(_delegates[user], address(0), amount);
+    function burn(address _user, uint256 _amount) public {
+        require(minters[msg.sender], "not minter");
+        _burn(_user, _amount);
+        _moveDelegates(_delegates[_user], address(0), _amount);
     }
 
-    function transfer(address recipient, uint256 amount) public override returns (bool) {
-        super.transfer(recipient, amount);
-        _moveDelegates(msg.sender, recipient, amount);
+    function transfer(address _recipient, uint256 _amount) public override returns (bool) {
+        super.transfer(_recipient, _amount);
+        _moveDelegates(msg.sender, _recipient, _amount);
         return true;
     }
 
-    function transferFrom(address sender, address recipient, uint256 amount) public override returns (bool) {
-        super.transferFrom(sender, recipient, amount);
-        _moveDelegates(sender, recipient, amount);
+    function transferFrom(address _sender, address _recipient, uint256 _amount) public override returns (bool) {
+        super.transferFrom(_sender, _recipient, _amount);
+        _moveDelegates(_sender, _recipient, _amount);
         return true;
     }
 
