@@ -5,12 +5,13 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
+import "../libraries/upgradeability/Initializable.sol";
 import "./IPoolToken.sol";
 
 /**
  * @notice ACoconut exchange.
  */
-contract ACoconutExchange {
+contract ACoconutExchange is Initializable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -50,8 +51,8 @@ contract ACoconutExchange {
     bool public paused;
     bool public terminated;
 
-    constructor(address[] memory _tokens, uint256[] memory _precisions, uint256[] memory _fees,
-        address _poolToken, address _feeRecipient, uint256 _A) public {
+    function initialize(address[] memory _tokens, uint256[] memory _precisions, uint256[] memory _fees,
+        address _poolToken, address _feeRecipient, uint256 _A) public initializer {
         require(_tokens.length == _precisions.length, "input mismatch");
         require(_fees.length == 3, "no fees");
         for (uint256 i = 0; i < _tokens.length; i++) {
@@ -62,6 +63,7 @@ contract ACoconutExchange {
         require(_poolToken != address(0x0), "pool token not set");
         require(_feeRecipient != address(0x0), "fee receiver not set");
 
+        governance = msg.sender;
         tokens = _tokens;
         poolToken = _poolToken;
         feeRecipient = _feeRecipient;
