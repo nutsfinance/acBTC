@@ -98,13 +98,15 @@ contract RewardedVault is Vault {
     /**
      * @dev Withdraws all rewards from the vault.
      */
-    function getReward() public updateReward(msg.sender) {
+    function getReward() public updateReward(msg.sender) returns (uint256) {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
             rewardToken.safeTransfer(msg.sender, reward);
             emit RewardPaid(msg.sender, reward);
         }
+
+        return reward;
     }
 
     /**

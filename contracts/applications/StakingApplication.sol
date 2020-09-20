@@ -14,6 +14,10 @@ import "../acoconut/ACoconutVault.sol";
 contract StakingApplication {
     using SafeMath for uint256;
 
+    event Staked(address indexed staker, address indexed token, uint256 amount);
+    event Unstaked(address indexed staker, address indexed token, uint256 amount);
+    event Claimed(address indexed staker, address indexed token, uint256 amount);
+
     address public accountFactory;
     address public aCoconutVault;
 
@@ -50,6 +54,8 @@ contract StakingApplication {
 
         bytes memory methodData = abi.encodeWithSignature("deposit(uint256)", _amount);
         account.invoke(aCoconutVault, 0, methodData);
+
+        emit Staked(msg.sender, address(token), _amount);
     }
 
     /**
@@ -60,10 +66,13 @@ contract StakingApplication {
         require(_amount > 0, "zero amount");
         Account account = _getAccount();
 
+        IERC20 token = ACoconutVault(aCoconutVault).token();
         // Important: Need to convert token amount to vault share!
         uint256 shares = _amount.div(ACoconutVault(aCoconutVault).getPricePerFullShare());
         bytes memory methodData = abi.encodeWithSignature("withdraw(uint256)", shares);
         account.invoke(aCoconutVault, 0, methodData);
+
+        emit Unstaked(msg.sender, address(token), _amount);
     }
 
     /**
@@ -72,8 +81,12 @@ contract StakingApplication {
     function claimRewards() public {
         Account account = _getAccount();
 
+        IERC20 rewardToken = ACoconutVault(aCoconutVault).rewardToken();
         bytes memory methodData = abi.encodeWithSignature("getReward()");
-        account.invoke(aCoconutVault, 0, methodData);
+        bytes memory methodResult = account.invoke(aCoconutVault, 0, methodData);
+        uint256 claimAmount = abi.decode(methodResult, (uint256));
+
+        emit Claimed(msg.sender, address(rewardToken), claimAmount);
     }
 
     /**
