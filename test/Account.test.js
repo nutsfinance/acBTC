@@ -18,6 +18,13 @@ contract("Account", async ([deployer, owner, user, user2, admin1, admin2, admin3
         assert.equal(await account.admins(admin2), true);
         assert.equal(await account.admins(admin3), false);
     });
+    it('should be able to transfer ownership', async () => {
+        await account.transferOwnership(user, {from: owner});
+        assert.equal(await account.owner(), user);
+    });
+    it('should not able to transfer ownership other than owner', async () => {
+        await expectRevert(account.transferOwnership(user2, {from: user}), "not owner");
+    });
     it("should allow to grant admin role by owner", async () => {
         assert.equal(await account.admins(user), false);
         await account.grantAdmin(user, {from: owner});
@@ -26,6 +33,14 @@ contract("Account", async ([deployer, owner, user, user2, admin1, admin2, admin3
     it("should not allow to grant admin role other than owner", async () => {
         await expectRevert(account.grantAdmin(user, {from: admin1}), "not owner");
     });
+    it("should allow to revoke admin role by owner", async () => {
+        assert.equal(await account.admins(admin1), true);
+        await account.revokeAdmin(admin1, {from: owner});
+        assert.equal(await account.admins(admin1), false);
+    });
+    it("should not allow to revoke admin role other than owner", async () => {
+        await expectRevert(account.revokeAdmin(admin2, {from: admin1}), "not owner");
+    });
     it("should allow to grant operator role by admin", async () => {
         assert.equal(await account.operators(user), false);
         await account.grantOperator(user, {from: admin1});
@@ -33,6 +48,17 @@ contract("Account", async ([deployer, owner, user, user2, admin1, admin2, admin3
     });
     it("should not allow to grant operator role other than admin", async () => {
         await expectRevert(account.grantOperator(user, {from: user2}), "not admin");
+    });
+    it("should allow to revoke operator role by admin", async () => {
+        assert.equal(await account.operators(user), false);
+        await account.grantOperator(user, {from: admin1});
+        assert.equal(await account.operators(user), true);
+        await account.revokeOperator(user, {from: admin1});
+        assert.equal(await account.operators(user), false);
+    });
+    it("should not allow to revoke operator role other than admin", async () => {
+        await account.grantOperator(user, {from: admin1});
+        await expectRevert(account.revokeOperator(user, {from: user2}), "not admin");
     });
     it("should allow to withdraw ETH by operator", async () => {
         await account.send(100000000000000000);  // 0.1 ETH
