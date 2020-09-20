@@ -146,4 +146,31 @@ contract("Vault", async ([owner, user, user2, user3]) => {
         assert.equal(await token.balanceOf(vault.address), 0);
         assert.equal(await token.balanceOf(strategy.address), 0);
     });
+    it("should update share prices after harvest", async () => {
+        await vault.setStrategy(strategy.address);
+        await token.mint(user, 200);
+        await token.approve(vault.address, 200, {from: user});
+        await vault.depositAll({from: user});
+        // Deposit into strategy!
+        await vault.earn();
+        // Harvest from strategy!
+        await strategy.harvest();
+        assert.equal(await vault.getPricePerFullShare(), '1200000000000000000');
+
+        // Second user deposits 360 tokens
+        await token.mint(user2, 360);
+        await token.approve(vault.address, 360, {from: user2});
+        await vault.depositAll({from: user2});
+        assert.equal(await vault.totalSupply(), 500);
+        assert.equal(await vault.balanceOf(user2), 300);
+        assert.equal(await vault.balance(), 600);
+        assert.equal(await strategy.balanceOf(), 240);
+        assert.equal(await token.balanceOf(vault.address), 360);
+        assert.equal(await token.balanceOf(strategy.address), 240);
+
+        await vault.earn();
+        assert.equal(await strategy.balanceOf(), 600);
+        assert.equal(await token.balanceOf(vault.address), 0);
+        assert.equal(await token.balanceOf(strategy.address), 600);
+    });
 });
