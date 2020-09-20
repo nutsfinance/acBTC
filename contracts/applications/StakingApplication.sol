@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../account/Account.sol";
 import "../account/AccountFactory.sol";
-import "../acoconut/ACoconutVault.sol";
+import "../libraries/vaults/RewardedVault.sol";
 
 /**
  * @dev Application to help stake and get rewards.
@@ -14,19 +14,47 @@ import "../acoconut/ACoconutVault.sol";
 contract StakingApplication {
     using SafeMath for uint256;
 
-    event Staked(address indexed staker, address indexed token, uint256 amount);
-    event Unstaked(address indexed staker, address indexed token, uint256 amount);
-    event Claimed(address indexed staker, address indexed token, uint256 amount);
+    event Staked(address indexed staker, uint256 indexed vaultId, address indexed token, uint256 amount);
+    event Unstaked(address indexed staker, uint256 indexed vaultId, address indexed token, uint256 amount);
+    event Claimed(address indexed staker, uint256 indexed vaultId, address indexed token, uint256 amount);
 
+    address public governance;
     address public accountFactory;
-    address public aCoconutVault;
+    uint256 public numVaults;
+    mapping(uint256 => address) public vaults;
 
-    constructor(address _accountFactory, address _aCoconutVault) public {
+    constructor(address _accountFactory) public {
         require(_accountFactory != address(0x0), "account factory not set");
-        require(_aCoconutVault != address(0x0), "acoconut vault not set");
-
+        
+        governance = msg.sender;
         accountFactory = _accountFactory;
-        aCoconutVault = _aCoconutVault;
+    }
+
+    /**
+     * @dev Updates the govenance address.
+     */
+    function setGovernance(address _governance) public {
+        require(msg.sender == governance, "not governance");
+        governance = _governance;
+    }
+
+    /**
+     * @dev Updates the account factory.
+     */
+    function setAccountFactory(address _accountFactory) public {
+        require(msg.sender == governance, "not governance");
+        require(_accountFactory != address(0x0), "account factory not set");
+        accountFactory = _accountFactory;
+    }
+
+    /**
+     * @dev Add a new vault to the staking application.
+     */
+    function addVault(address _vault) public {
+        require(msg.sender == governance, "not governance");
+        require(_vault != address(0x0), "vault not set");
+
+        vaults[numVaults++] = _vault;
     }
 
     /**
@@ -43,58 +71,70 @@ contract StakingApplication {
 
     /**
      * @dev Stake token into ACoconutVault.
+     * @param _vaultId ID of the vault to stake.
      * @param _amount Amount of token to stake.
      */
-    function stake(uint256 _amount) public {
+    function stake(uint256 _vaultId, uint256 _amount) public {
+        require(vaults[_vaultId] != address(0x0), "no vault");
         require(_amount > 0, "zero amount");
-        Account account = _getAccount();
 
-        IERC20 token = ACoconutVault(aCoconutVault).token();
+        Account account = _getAccount();
+        address vault = vaults[_vaultId];
+        IERC20 token = RewardedVault(vault).token();
         account.approveToken(address(token), address(this), _amount);
 
         bytes memory methodData = abi.encodeWithSignature("deposit(uint256)", _amount);
-        account.invoke(aCoconutVault, 0, methodData);
+        account.invoke(vault, 0, methodData);
 
-        emit Staked(msg.sender, address(token), _amount);
+        emit Staked(msg.sender, _vaultId, address(token), _amount);
     }
 
     /**
-     * @dev Unstake token out of ACoconutVault.
+     * @dev Unstake token out of RewardedVault.
+     * @param _vaultId ID of the vault to unstake.
      * @param _amount Amount of token to unstake.
      */
-    function unstake(uint256 _amount) public {
+    function unstake(uint256 _vaultId, uint256 _amount) public {
+        require(vaults[_vaultId] != address(0x0), "no vault");
         require(_amount > 0, "zero amount");
+
         Account account = _getAccount();
-
-        IERC20 token = ACoconutVault(aCoconutVault).token();
+        address vault = vaults[_vaultId];
+        IERC20 token = RewardedVault(vault).token();
         // Important: Need to convert token amount to vault share!
-        uint256 shares = _amount.div(ACoconutVault(aCoconutVault).getPricePerFullShare());
+        uint256 shares = _amount.div(RewardedVault(vault).getPricePerFullShare());
         bytes memory methodData = abi.encodeWithSignature("withdraw(uint256)", shares);
-        account.invoke(aCoconutVault, 0, methodData);
+        account.invoke(vault, 0, methodData);
 
-        emit Unstaked(msg.sender, address(token), _amount);
+        emit Unstaked(msg.sender, _vaultId, address(token), _amount);
     }
 
     /**
-     * @dev Claims rewards from ACoconutVault.
+     * @dev Claims rewards from RewardedVault.
+     * @param _vaultId ID of the vault to unstake.
      */
-    function claimRewards() public {
-        Account account = _getAccount();
+    function claimRewards(uint256 _vaultId) public {
+        require(vaults[_vaultId] != address(0x0), "no vault");
 
-        IERC20 rewardToken = ACoconutVault(aCoconutVault).rewardToken();
+        Account account = _getAccount();
+        address vault = vaults[_vaultId];
+        IERC20 rewardToken = RewardedVault(vault).rewardToken();
         bytes memory methodData = abi.encodeWithSignature("getReward()");
-        bytes memory methodResult = account.invoke(aCoconutVault, 0, methodData);
+        bytes memory methodResult = account.invoke(vault, 0, methodData);
         uint256 claimAmount = abi.decode(methodResult, (uint256));
 
-        emit Claimed(msg.sender, address(rewardToken), claimAmount);
+        emit Claimed(msg.sender, _vaultId, address(rewardToken), claimAmount);
     }
 
     /**
-     * @dev Retrieves the amount of token staked in ACoconut vault.
+     * @dev Retrieves the amount of token staked in RewardedVault.
+     * @param _vaultId ID of the vault to unstake.
      */
-    function getStakeBalance() public view returns (uint256) {
+    function getStakeBalance(uint256 _vaultId) public view returns (uint256) {
+        require(vaults[_vaultId] != address(0x0), "no vault");
+
         address account = AccountFactory(accountFactory).getAccount(msg.sender);
-        ACoconutVault vault = ACoconutVault(aCoconutVault);
+        RewardedVault vault = RewardedVault(vaults[_vaultId]);
         uint256 totalBalance = vault.balance();
         uint256 totalSupply = vault.totalSupply();
         uint256 share = vault.balanceOf(account);
@@ -104,17 +144,23 @@ contract StakingApplication {
 
     /**
      * @dev Return the amount of unclaim rewards.
+     * @param _vaultId ID of the vault to unstake.
      */
-    function getUnclaimedReward() public view returns (uint256) {
+    function getUnclaimedReward(uint256 _vaultId) public view returns (uint256) {
+        require(vaults[_vaultId] != address(0x0), "no vault");
+
         address account = AccountFactory(accountFactory).getAccount(msg.sender);
-        return ACoconutVault(aCoconutVault).rewards(account);
+        return RewardedVault(vaults[_vaultId]).rewards(account);
     }
 
     /**
      * @dev Returns the total amount(claimed + unclaimed) of rewards earned so far.
+     * @param _vaultId ID of the vault to unstake.
      */
-    function getTotalReward() public view returns (uint256) {
+    function getTotalReward(uint256 _vaultId) public view returns (uint256) {
+        require(vaults[_vaultId] != address(0x0), "no vault");
+
         address account = AccountFactory(accountFactory).getAccount(msg.sender);
-        return ACoconutVault(aCoconutVault).earned(account);
+        return RewardedVault(vaults[_vaultId]).earned(account);
     }
 }
