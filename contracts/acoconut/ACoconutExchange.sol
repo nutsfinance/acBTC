@@ -494,6 +494,8 @@ contract ACoconutExchange is Initializable {
         if (fee > 0) {
             redeemAmount = redeemAmount.mul(feeDenominator).div(feeDenominator.sub(fee));
             feeAmount = redeemAmount.sub(oldD.sub(newD));
+            // No conversion is needed as the pool token has 18 decimals
+            IERC20(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
         }
         require(redeemAmount <= _maxRedeemAmount, "more than expected");
 
@@ -523,6 +525,7 @@ contract ACoconutExchange is Initializable {
         uint256 feeAmount = newD.sub(oldD);
         if (feeAmount == 0) return;
 
+        balances = _balances;
         address _feeRecipient = feeRecipient;
         IPoolToken(poolToken).mint(_feeRecipient, feeAmount);
 
