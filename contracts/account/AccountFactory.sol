@@ -16,7 +16,7 @@ contract AccountFactory {
 
     address public governance;
     address public accountBase;
-    mapping(address => address[]) public accounts;
+    mapping(address => address) public accounts;
 
     /**
      * @dev Constructor for Account Factory.
@@ -57,7 +57,7 @@ contract AccountFactory {
         AdminUpgradeabilityProxy proxy = new AdminUpgradeabilityProxy(accountBase, msg.sender);
         Account account = Account(address(proxy));
         account.initialize(msg.sender, _initialAdmins);
-        accounts[msg.sender].push(address(account));
+        accounts[msg.sender] = address(account);
 
         emit AccountCreated(msg.sender, address(account));
 
@@ -69,8 +69,6 @@ contract AccountFactory {
      * @param _user Address of the owner of the Account contract.
      */
     function getAccount(address _user) public view returns (address) {
-        if(accounts[_user].length == 0)    return address(0x0);
-
-        return accounts[_user][accounts[_user].length - 1];
+         return accounts[_user];
     }
 }
