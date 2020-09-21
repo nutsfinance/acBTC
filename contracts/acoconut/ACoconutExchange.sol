@@ -40,7 +40,6 @@ contract ACoconutExchange is Initializable {
     uint256 public swapFee; // Swap fee * 10**10
     uint256 public redeemFee; // Redeem fee * 10**10
     address public feeRecipient;
-    address public governance;
     address public poolToken;
 
     uint256 public initialA;
@@ -48,8 +47,9 @@ contract ACoconutExchange is Initializable {
     uint256 public initialATimestamp;
     uint256 public futureATimestamp;
 
+    address public governance;
+    mapping(address => bool) public admins;
     bool public paused;
-    bool public terminated;
 
     function initialize(address[] memory _tokens, uint256[] memory _precisions, uint256[] memory _fees,
         address _poolToken, address _feeRecipient, uint256 _A) public initializer {
@@ -72,6 +72,9 @@ contract ACoconutExchange is Initializable {
         mintFee = _fees[0];
         swapFee = _fees[1];
         redeemFee = _fees[2];
+
+        // The exchange must start with paused state!
+        paused = true;
     }
 
     /**
@@ -206,7 +209,8 @@ contract ACoconutExchange is Initializable {
      */
     function mint(uint256[] calldata _amounts, uint256 _minMintAmount) external {
         uint256[] memory _balances = balances;
-        require(!paused && !terminated, "paused");
+        // If exchange is paused, only admins can mint.
+        require(!paused || admins[msg.sender], "paused");
         require(_balances.length == _amounts.length, "invalid amounts");
 
         uint256 A = getA();
@@ -282,7 +286,8 @@ contract ACoconutExchange is Initializable {
      */
     function exchange(uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external {
         uint256[] memory _balances = balances;
-        require(!paused && !terminated, "paused");
+        // If exchange is paused, only admins can exchange.
+        require(!paused || admins[msg.sender], "paused");
         require(_i != _j, "same token");
         require(_i < _balances.length, "invalid in");
         require(_j < _balances.length, "invalid out");
@@ -346,7 +351,8 @@ contract ACoconutExchange is Initializable {
      */
     function redeem(uint256 _amount, uint256[] calldata _minRedeemAmounts) external {
         uint256[] memory _balances = balances;
-        require(!paused && !terminated, "paused");
+        // If exchange is paused, only admins can redeem.
+        require(!paused || admins[msg.sender], "paused");
         require(_amount > 0, "zero amount");
         require(_balances.length == _minRedeemAmounts.length, "invalid mins");
 
@@ -410,7 +416,8 @@ contract ACoconutExchange is Initializable {
      */
     function redeem(uint256 _amount, uint256 _i, uint256 _minRedeemAmount) external {
         uint256[] memory _balances = balances;
-        require(!paused && !terminated, "paused");
+        // If exchange is paused, only admins can redeem.
+        require(!paused || admins[msg.sender], "paused");
         require(_amount > 0, "zero amount");
         require(_i < _balances.length, "invalid token");
 
@@ -475,7 +482,8 @@ contract ACoconutExchange is Initializable {
     function redeemTokens(uint256[] calldata _amounts, uint256 _maxRedeemAmount) external {
         uint256[] memory _balances = balances;
         require(_amounts.length == balances.length, "length not match");
-        require(!paused && !terminated, "paused");
+        // If exchange is paused, only admins can redeem.
+        require(!paused || admins[msg.sender], "paused");
         
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
@@ -613,7 +621,6 @@ contract ACoconutExchange is Initializable {
     function pause() external {
         require(msg.sender == governance, "not governance");
         require(!paused, "paused");
-        require(!terminated, "terminated");
 
         paused = true;
     }
@@ -624,18 +631,19 @@ contract ACoconutExchange is Initializable {
     function unpause() external {
         require(msg.sender == governance, "not governance");
         require(paused, "not paused");
-        require(!terminated, "terminated");
 
         paused = false;
     }
 
     /**
-     * @dev Terminate mint/swap/redeem actions.
+     * @dev Updates the admin role for the address.
+     * @param _account Address to update admin role.
+     * @param _allowed Whether the address is granted the admin role.
      */
-    function terminate() external {
+    function setAdmin(address _account, bool _allowed) external {
         require(msg.sender == governance, "not governance");
-        require(!terminated, "terminated");
+        require(_account != address(0x0), "account not set");
 
-        terminated = true;
+        admins[_account] = _allowed;
     }
 }
