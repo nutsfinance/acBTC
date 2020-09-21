@@ -523,6 +523,7 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
      * @dev Collect fee based on the token balance difference.
      */
     function collectFees() external returns (uint256) {
+        require(msg.sender == feeRecipient, "not fee recipient");
         uint256[] memory _balances = balances;
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
