@@ -11,8 +11,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  */
 contract ACoconut is ERC20 {
     
-    address governance;
-    mapping(address => bool) minters;
+    address public governance;
+    mapping(address => bool) public minters;
 
     /// @notice A record of each accounts delegate
     mapping (address => address) internal _delegates;

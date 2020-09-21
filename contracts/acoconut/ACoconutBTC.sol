@@ -10,8 +10,8 @@ import "./IPoolToken.sol";
  */
 contract ACoconutBTC is ERC20, IPoolToken {
     
-    address governance;
-    mapping(address => bool) minters;
+    address public governance;
+    mapping(address => bool) public minters;
 
     constructor() public ERC20("ACoconut BTC", "acBTC") {
         governance = msg.sender;
