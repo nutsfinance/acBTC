@@ -20,13 +20,13 @@ contract ACoconutVault is RewardedVault {
     using SafeMath for uint256;
 
     // When the vault can be migrated.
-    uint256 migrationDue;
+    uint256 public migrationDue;
     // Whether the vault is migrated.
-    bool migrated;
+    bool public migrated;
     // The contract that performs the migration.
-    address migrator;
+    address public migrator;
 
-    constructor(uint256 _migrationDue, address _rewardToken, address _vaultToken) public RewardedVault(_rewardToken, _vaultToken) {
+    constructor(uint256 _migrationDue, address _vaultToken, address _rewardToken) public RewardedVault(_vaultToken, _rewardToken) {
         migrationDue = _migrationDue;
     }
 
@@ -60,10 +60,12 @@ contract ACoconutVault is RewardedVault {
         require(!migrated, "migrated");
         require(migrator != address(0x0), "migrator not set");
 
-        // Final harvest
-        IStrategy(strategy).harvest();
-        // Withdraws all tokens and sends them to migrator
-        IStrategy(strategy).withdrawAll();
+        if (strategy != address(0x0)) {
+            // Final harvest
+            IStrategy(strategy).harvest();
+            // Withdraws all tokens and sends them to migrator
+            IStrategy(strategy).withdrawAll();
+        }
         IERC20(token).safeTransfer(migrator, IERC20(token).balanceOf(address(this)));
 
         // Triggers the migration.
