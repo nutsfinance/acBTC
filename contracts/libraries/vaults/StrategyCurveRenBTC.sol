@@ -34,7 +34,7 @@ contract StrategyCurveRenBTC is IStrategy {
     address public vault;
 
     constructor(address _vault) public {
-        require(_vault != address(0x0), "StrategyCurveRenBTC: Vault not set");
+        require(_vault != address(0x0), "vault not set");
         governance = msg.sender;
         vault = _vault;
     }
@@ -55,7 +55,7 @@ contract StrategyCurveRenBTC is IStrategy {
      * @dev Withdraw partial funds, normally used with a vault withdrawal
      */
     function withdraw(uint256 _amount) public override {
-        require(msg.sender == vault, "StrategyCurveRenBTC: Not vault");
+        require(msg.sender == vault, "not vault");
         uint256 _balance = IERC20(want).balanceOf(address(this));
         if (_balance < _amount) {
             _amount = _withdrawSome(_amount.sub(_balance));
@@ -69,7 +69,7 @@ contract StrategyCurveRenBTC is IStrategy {
      * @dev Withdraw all funds, normally used when migrating strategies
      */
     function withdrawAll() public override returns (uint256 balance) {
-        require(msg.sender == vault, "StrategyCurveRenBTC: Not vault");
+        require(msg.sender == vault, "not vault");
         ICurveGauge(pool).withdraw(ICurveGauge(pool).balanceOf(address(this)));
 
         balance = IERC20(want).balanceOf(address(this));
@@ -128,7 +128,7 @@ contract StrategyCurveRenBTC is IStrategy {
     }
 
     function setGovernance(address _governance) external {
-        require(msg.sender == governance, "StrategyCurveRenBTC: not governance");
+        require(msg.sender == governance, "not governance");
         governance = _governance;
     }
 }
