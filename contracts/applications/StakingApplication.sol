@@ -62,7 +62,7 @@ contract StakingApplication {
      */
     function _getAccount() internal view returns (Account) {
         address _account = AccountFactory(accountFactory).getAccount(msg.sender);
-        require(_account != address(0x0), "account not exist");
+        require(_account != address(0x0), "no account");
         Account account = Account(payable(_account));
         require(account.isOperator(address(this)), "not operator");
 
@@ -81,7 +81,7 @@ contract StakingApplication {
         Account account = _getAccount();
         address vault = vaults[_vaultId];
         IERC20 token = RewardedVault(vault).token();
-        account.approveToken(address(token), address(this), _amount);
+        account.approveToken(address(token), vault, _amount);
 
         bytes memory methodData = abi.encodeWithSignature("deposit(uint256)", _amount);
         account.invoke(vault, 0, methodData);
