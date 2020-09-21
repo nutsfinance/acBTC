@@ -4,6 +4,7 @@ pragma solidity 0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "../libraries/upgradeability/Initializable.sol";
 import "./IPoolToken.sol";
@@ -11,7 +12,7 @@ import "./IPoolToken.sol";
 /**
  * @notice ACoconut exchange.
  */
-contract ACoconutExchange is Initializable {
+contract ACoconutExchange is Initializable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -207,7 +208,7 @@ contract ACoconutExchange is Initializable {
      * @param _amounts Unconverted token balances used to mint pool token.
      * @param _minMintAmount Minimum amount of pool token to mint.
      */
-    function mint(uint256[] calldata _amounts, uint256 _minMintAmount) external {
+    function mint(uint256[] calldata _amounts, uint256 _minMintAmount) external nonReentrant {
         uint256[] memory _balances = balances;
         // If exchange is paused, only admins can mint.
         require(!paused || admins[msg.sender], "paused");
@@ -284,7 +285,7 @@ contract ACoconutExchange is Initializable {
      * @param _dx Unconverted amount of token _i to exchange in.
      * @param _minDy Minimum token _j to exchange out in converted balance.
      */
-    function exchange(uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external {
+    function exchange(uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external nonReentrant {
         uint256[] memory _balances = balances;
         // If exchange is paused, only admins can exchange.
         require(!paused || admins[msg.sender], "paused");
@@ -349,7 +350,7 @@ contract ACoconutExchange is Initializable {
      * @param _amount Amount of pool token to redeem.
      * @param _minRedeemAmounts Minimum amount of underlying tokens to get.
      */
-    function redeem(uint256 _amount, uint256[] calldata _minRedeemAmounts) external {
+    function redeem(uint256 _amount, uint256[] calldata _minRedeemAmounts) external nonReentrant {
         uint256[] memory _balances = balances;
         // If exchange is paused, only admins can redeem.
         require(!paused || admins[msg.sender], "paused");
@@ -414,7 +415,7 @@ contract ACoconutExchange is Initializable {
      * @param _i Index of the token to redeem to.
      * @param _minRedeemAmount Minimum amount of the underlying token to redeem to.
      */
-    function redeem(uint256 _amount, uint256 _i, uint256 _minRedeemAmount) external {
+    function redeem(uint256 _amount, uint256 _i, uint256 _minRedeemAmount) external nonReentrant {
         uint256[] memory _balances = balances;
         // If exchange is paused, only admins can redeem.
         require(!paused || admins[msg.sender], "paused");
@@ -479,7 +480,7 @@ contract ACoconutExchange is Initializable {
      * @param _amounts Amounts of underlying tokens to redeem to.
      * @param _maxRedeemAmount Maximum of pool token to redeem.
      */
-    function redeemTokens(uint256[] calldata _amounts, uint256 _maxRedeemAmount) external {
+    function redeemTokens(uint256[] calldata _amounts, uint256 _maxRedeemAmount) external nonReentrant {
         uint256[] memory _balances = balances;
         require(_amounts.length == balances.length, "length not match");
         // If exchange is paused, only admins can redeem.
