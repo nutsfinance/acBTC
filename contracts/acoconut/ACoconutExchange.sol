@@ -521,7 +521,7 @@ contract ACoconutExchange is Initializable {
     /**
      * @dev Collect fee based on the token balance difference.
      */
-    function collectFees() external {
+    function collectFees() external returns (uint256) {
         uint256[] memory _balances = balances;
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
@@ -531,13 +531,15 @@ contract ACoconutExchange is Initializable {
         }
         uint256 newD = _getD(_balances, A);
         uint256 feeAmount = newD.sub(oldD);
-        if (feeAmount == 0) return;
+        if (feeAmount == 0) return 0;
 
         balances = _balances;
         address _feeRecipient = feeRecipient;
         IPoolToken(poolToken).mint(_feeRecipient, feeAmount);
 
         emit FeeCollected(_feeRecipient, feeAmount);
+
+        return feeAmount;
     }
 
     /**
