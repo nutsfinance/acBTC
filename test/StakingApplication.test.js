@@ -33,4 +33,10 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
         await stakingApplication.setGovernance(user1);
         assert.equal(await stakingApplication.governance(), user1);
     });
+    it("should add vault", async () => {
+        await expectRevert(stakingApplication.addVault(aCoconutVault.address, {from: user1}), "not governance");
+        await stakingApplication.addVault(aCoconutVault.address);
+        assert.equal(await stakingApplication.numVaults(), 1);
+        assert.equal(await stakingApplication.vaults(0), aCoconutVault.address);
+    });
 });
