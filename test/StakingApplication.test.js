@@ -1,7 +1,7 @@
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 const assert = require('assert');
 const RenCrv = artifacts.require("MockRenCrv");
-const ACoconutBTC = artifacts.require("MockWBTC");
+const ACoconut = artifacts.require("MockWBTC");
 const Account = artifacts.require("Account");
 const AccountFactory = artifacts.require("AccountFactory");
 const ACoconutVault = artifacts.require("ACoconutVault");
@@ -9,15 +9,15 @@ const StakingApplication = artifacts.require("StakingApplication");
 
 contract('StakingApplication', async ([owner, user1, user2]) => {
     let renCrv;
-    let aCoconutBTC;
+    let aCoconut;
     let aCoconutVault;
     let accountFactory;
     let stakingApplication;
     beforeEach(async () => {
         renCrv = await RenCrv.new();
-        aCoconutBTC = await ACoconutBTC.new();
+        aCoconut = await ACoconut.new();
         const migrationDue = (await time.latest()).toNumber() + 3600;
-        aCoconutVault = await ACoconutVault.new(migrationDue, renCrv.address, aCoconutBTC.address);
+        aCoconutVault = await ACoconutVault.new(migrationDue, renCrv.address, aCoconut.address);
         const account = await Account.new();
         accountFactory = await AccountFactory.new(account.address);
         stakingApplication = await StakingApplication.new(accountFactory.address);
@@ -51,19 +51,45 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
         await accountFactory.createAccount([], {from: user1});
         await expectRevert(stakingApplication.stake(0, 1000, {from: user1}), "not operator");
     });
-    it("should be able to stake", async () => {
+    it("should be able to stake and unstake", async () => {
         await stakingApplication.addVault(aCoconutVault.address);
         await accountFactory.createAccount([stakingApplication.address], {from: user1});
         const account = await accountFactory.getAccount(user1);
-        console.log(account);
         await renCrv.mint(account, 2000);
         assert.equal(await renCrv.balanceOf(account), 2000);
-        console.log(renCrv.address);
-        console.log(await aCoconutVault.token());
-        console.log((await renCrv.allowance(account, stakingApplication.address)).toNumber());
 
         await stakingApplication.stake(0, 800, {from: user1});
         assert.equal(await renCrv.balanceOf(account), 1200);
         assert.equal(await aCoconutVault.balanceOf(account), 800);
+        assert.equal(await stakingApplication.getStakeBalance(0, {from: user1}), 800);
+
+        await stakingApplication.unstake(0, 300, {from: user1});
+        assert.equal(await renCrv.balanceOf(account), 1500);
+        assert.equal(await aCoconutVault.balanceOf(account), 500);
+        assert.equal(await stakingApplication.getStakeBalance(0, {from: user1}), 500);
     });
+    // it("should be able to get rewards", async () => {
+    //     await stakingApplication.addVault(aCoconutVault.address);
+    //     await accountFactory.createAccount([stakingApplication.address], {from: user1});
+    //     const account = await accountFactory.getAccount(user1);
+    //     await renCrv.mint(account, 2000);
+    //     assert.equal(await renCrv.balanceOf(account), 2000);
+
+    //     await stakingApplication.stake(0, 800, {from: user1});
+    //     assert.equal(await stakingApplication.getTotalReward(0, {from: user1}), 0);
+    //     assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), 0);
+    //     await aCoconut.mint(owner, '40000000000000000000000');
+    //     await aCoconut.approve(aCoconutVault.address, '40000000000000000000000');
+    //     await aCoconutVault.addRewardAmount('40000000000000000000000');
+
+    //     // After 7 days, user1 should get all the rewards!
+    //     assert.equal(await aCoconut.balanceOf(account), 0);
+    //     await time.increase(3600 * 24 * 8);
+    //     assert.equal((await stakingApplication.getTotalReward(0, {from: user1})).toString(), '40000000000000000000000');
+    //     assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), '40000000000000000000000');
+    //     await stakingApplication.claimRewards(0, {from: user1});
+    //     assert.equal(await stakingApplication.getTotalReward(0, {from: user1}), '40000000000000000000000');
+    //     assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), 0);
+    //     assert.equal(await aCoconut.balanceOf(account), '40000000000000000000000');
+    // });
 });

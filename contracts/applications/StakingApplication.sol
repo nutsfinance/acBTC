@@ -79,12 +79,12 @@ contract StakingApplication {
         require(_amount > 0, "zero amount");
 
         Account account = _getAccount();
-        address vault = vaults[_vaultId];
-        IERC20 token = RewardedVault(vault).token();
-        account.approveToken(address(token), vault, _amount);
+        RewardedVault vault = RewardedVault(vaults[_vaultId]);
+        IERC20 token = vault.token();
+        account.approveToken(address(token), address(vault), _amount);
 
         bytes memory methodData = abi.encodeWithSignature("deposit(uint256)", _amount);
-        account.invoke(vault, 0, methodData);
+        account.invoke(address(vault), 0, methodData);
 
         emit Staked(msg.sender, _vaultId, address(token), _amount);
     }
@@ -99,12 +99,15 @@ contract StakingApplication {
         require(_amount > 0, "zero amount");
 
         Account account = _getAccount();
-        address vault = vaults[_vaultId];
-        IERC20 token = RewardedVault(vault).token();
+        RewardedVault vault = RewardedVault(vaults[_vaultId]);
+        IERC20 token = vault.token();
+
         // Important: Need to convert token amount to vault share!
-        uint256 shares = _amount.div(RewardedVault(vault).getPricePerFullShare());
+        uint256 totalBalance = vault.balance();
+        uint256 totalSupply = vault.totalSupply();
+        uint256 shares = _amount.mul(totalSupply).div(totalBalance);
         bytes memory methodData = abi.encodeWithSignature("withdraw(uint256)", shares);
-        account.invoke(vault, 0, methodData);
+        account.invoke(address(vault), 0, methodData);
 
         emit Unstaked(msg.sender, _vaultId, address(token), _amount);
     }
@@ -117,10 +120,10 @@ contract StakingApplication {
         require(vaults[_vaultId] != address(0x0), "no vault");
 
         Account account = _getAccount();
-        address vault = vaults[_vaultId];
-        IERC20 rewardToken = RewardedVault(vault).rewardToken();
+        RewardedVault vault = RewardedVault(vaults[_vaultId]);
+        IERC20 rewardToken = vault.rewardToken();
         bytes memory methodData = abi.encodeWithSignature("getReward()");
-        bytes memory methodResult = account.invoke(vault, 0, methodData);
+        bytes memory methodResult = account.invoke(address(vault), 0, methodData);
         uint256 claimAmount = abi.decode(methodResult, (uint256));
 
         emit Claimed(msg.sender, _vaultId, address(rewardToken), claimAmount);
