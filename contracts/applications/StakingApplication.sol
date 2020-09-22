@@ -122,7 +122,7 @@ contract StakingApplication {
         Account account = _getAccount();
         RewardedVault vault = RewardedVault(vaults[_vaultId]);
         IERC20 rewardToken = vault.rewardToken();
-        bytes memory methodData = abi.encodeWithSignature("getReward()");
+        bytes memory methodData = abi.encodeWithSignature("claimReward()");
         bytes memory methodResult = account.invoke(address(vault), 0, methodData);
         uint256 claimAmount = abi.decode(methodResult, (uint256));
 
@@ -150,17 +150,6 @@ contract StakingApplication {
      * @param _vaultId ID of the vault to unstake.
      */
     function getUnclaimedReward(uint256 _vaultId) public view returns (uint256) {
-        require(vaults[_vaultId] != address(0x0), "no vault");
-
-        address account = AccountFactory(accountFactory).getAccount(msg.sender);
-        return RewardedVault(vaults[_vaultId]).rewards(account);
-    }
-
-    /**
-     * @dev Returns the total amount(claimed + unclaimed) of rewards earned so far.
-     * @param _vaultId ID of the vault to unstake.
-     */
-    function getTotalReward(uint256 _vaultId) public view returns (uint256) {
         require(vaults[_vaultId] != address(0x0), "no vault");
 
         address account = AccountFactory(accountFactory).getAccount(msg.sender);

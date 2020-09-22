@@ -1,4 +1,4 @@
-const { expectRevert, time } = require('@openzeppelin/test-helpers');
+const { BN, expectRevert, time } = require('@openzeppelin/test-helpers');
 const assert = require('assert');
 const RenCrv = artifacts.require("MockRenCrv");
 const ACoconut = artifacts.require("MockWBTC");
@@ -6,6 +6,14 @@ const Account = artifacts.require("Account");
 const AccountFactory = artifacts.require("AccountFactory");
 const ACoconutVault = artifacts.require("ACoconutVault");
 const StakingApplication = artifacts.require("StakingApplication");
+
+const assertAlmostEqual = function(expectedOrig, actualOrig) {
+    const _1e18 = new BN('10').pow(new BN('18'));
+    const expected = new BN(expectedOrig).div(_1e18).toNumber();
+    const actual = new BN(actualOrig).div(_1e18).toNumber();
+
+    assert.ok(Math.abs(expected - actual) <= 2, `Expected ${expected}, actual ${actual}`);
+}
 
 contract('StakingApplication', async ([owner, user1, user2]) => {
     let renCrv;
@@ -68,28 +76,25 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
         assert.equal(await aCoconutVault.balanceOf(account), 500);
         assert.equal(await stakingApplication.getStakeBalance(0, {from: user1}), 500);
     });
-    // it("should be able to get rewards", async () => {
-    //     await stakingApplication.addVault(aCoconutVault.address);
-    //     await accountFactory.createAccount([stakingApplication.address], {from: user1});
-    //     const account = await accountFactory.getAccount(user1);
-    //     await renCrv.mint(account, 2000);
-    //     assert.equal(await renCrv.balanceOf(account), 2000);
+    it("should be able to get rewards", async () => {
+        await stakingApplication.addVault(aCoconutVault.address);
+        await accountFactory.createAccount([stakingApplication.address], {from: user1});
+        const account = await accountFactory.getAccount(user1);
+        await renCrv.mint(account, 2000);
+        assert.equal(await renCrv.balanceOf(account), 2000);
 
-    //     await stakingApplication.stake(0, 800, {from: user1});
-    //     assert.equal(await stakingApplication.getTotalReward(0, {from: user1}), 0);
-    //     assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), 0);
-    //     await aCoconut.mint(owner, '40000000000000000000000');
-    //     await aCoconut.approve(aCoconutVault.address, '40000000000000000000000');
-    //     await aCoconutVault.addRewardAmount('40000000000000000000000');
+        await stakingApplication.stake(0, 800, {from: user1});
+        assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), 0);
+        await aCoconut.mint(owner, web3.utils.toWei('40000'));
+        await aCoconut.approve(aCoconutVault.address, web3.utils.toWei('40000'));
+        await aCoconutVault.addRewardAmount(web3.utils.toWei('40000'));
 
-    //     // After 7 days, user1 should get all the rewards!
-    //     assert.equal(await aCoconut.balanceOf(account), 0);
-    //     await time.increase(3600 * 24 * 8);
-    //     assert.equal((await stakingApplication.getTotalReward(0, {from: user1})).toString(), '40000000000000000000000');
-    //     assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), '40000000000000000000000');
-    //     await stakingApplication.claimRewards(0, {from: user1});
-    //     assert.equal(await stakingApplication.getTotalReward(0, {from: user1}), '40000000000000000000000');
-    //     assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), 0);
-    //     assert.equal(await aCoconut.balanceOf(account), '40000000000000000000000');
-    // });
+        // After 7 days, user1 should get all the rewards!
+        assert.equal(await aCoconut.balanceOf(account), 0);
+        await time.increase(3600 * 24 * 8);
+        assertAlmostEqual(await stakingApplication.getUnclaimedReward(0, {from: user1}), web3.utils.toWei('40000'));
+        await stakingApplication.claimRewards(0, {from: user1});
+        assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), 0);
+        assertAlmostEqual(await aCoconut.balanceOf(account), web3.utils.toWei('40000'));
+    });
 });

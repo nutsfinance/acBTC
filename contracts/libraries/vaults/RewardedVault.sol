@@ -92,13 +92,13 @@ contract RewardedVault is Vault {
      */
     function exit() external {
         withdrawAll();
-        getReward();
+        claimReward();
     }
 
     /**
-     * @dev Withdraws all rewards from the vault.
+     * @dev Claims all rewards from the vault.
      */
-    function getReward() public updateReward(msg.sender) returns (uint256) {
+    function claimReward() public updateReward(msg.sender) returns (uint256) {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
