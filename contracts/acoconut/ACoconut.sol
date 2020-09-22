@@ -52,7 +52,7 @@ contract ACoconut is ERC20 {
      * @dev Updates the govenance address.
      */
     function setGovernance(address _governance) public {
-        require(msg.sender == governance, "Not governance");
+        require(msg.sender == governance, "not governance");
         governance = _governance;
     }
 
