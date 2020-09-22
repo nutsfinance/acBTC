@@ -30,12 +30,10 @@ contract StrategyCurveRenBTC is IStrategy {
     address public constant wbtc = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599); // WBTC token
     address public constant curve = address(0x93054188d876f558f4a66B2EF1d97d16eDf0895B); // REN swap
 
-    address public governance;
     address public vault;
 
     constructor(address _vault) public {
         require(_vault != address(0x0), "vault not set");
-        governance = msg.sender;
         vault = _vault;
     }
 
@@ -125,10 +123,5 @@ contract StrategyCurveRenBTC is IStrategy {
 
     function balanceOf() public view override returns (uint256) {
         return balanceOfWant().add(balanceOfPool());
-    }
-
-    function setGovernance(address _governance) external {
-        require(msg.sender == governance, "not governance");
-        governance = _governance;
     }
 }
