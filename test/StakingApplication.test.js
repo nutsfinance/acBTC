@@ -93,8 +93,10 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
         assert.equal(await aCoconut.balanceOf(account), 0);
         await time.increase(3600 * 24 * 8);
         assertAlmostEqual(await stakingApplication.getUnclaimedReward(0, {from: user1}), web3.utils.toWei('40000'));
+        assert.equal(await stakingApplication.getClaimedReward(0, {from: user1}), 0);
         await stakingApplication.claimRewards(0, {from: user1});
         assert.equal(await stakingApplication.getUnclaimedReward(0, {from: user1}), 0);
+        assertAlmostEqual(await stakingApplication.getClaimedReward(0, {from: user1}), web3.utils.toWei('40000'));
         assertAlmostEqual(await aCoconut.balanceOf(account), web3.utils.toWei('40000'));
     });
 });

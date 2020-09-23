@@ -26,6 +26,7 @@ contract RewardedVault is Vault {
     uint256 public rewardPerTokenStored;
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
+    mapping(address => uint256) public claims;
 
     event RewardAdded(uint256 reward);
     event RewardPaid(address indexed user, uint256 reward);
@@ -101,6 +102,7 @@ contract RewardedVault is Vault {
     function claimReward() public updateReward(msg.sender) returns (uint256) {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
+            claims[msg.sender] = claims[msg.sender].add(reward);
             rewards[msg.sender] = 0;
             rewardToken.safeTransfer(msg.sender, reward);
             emit RewardPaid(msg.sender, reward);

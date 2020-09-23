@@ -94,12 +94,23 @@ contract ACoconut is ERC20, ERC20Capped {
         _moveDelegates(_delegates[msg.sender], address(0), _amount);
     }
 
+    /**
+     * @dev Transfers AC token to another address.
+     * @param _recipient Receiver address for the AC token.
+     * @param _amount Amount of token to transfer.
+     */
     function transfer(address _recipient, uint256 _amount) public override returns (bool) {
         super.transfer(_recipient, _amount);
         _moveDelegates(_delegates[msg.sender], _delegates[_recipient], _amount);
         return true;
     }
 
+    /**
+     * @dev Transfers AC token from one account to another address. Caller must have sufficient allowance from the sender account.
+     * @param _sender Sender address for the AC token.
+     * @param _recipient Receiver address for the AC token.
+     * @param _amount Amount of token to transfer.
+     */
     function transferFrom(address _sender, address _recipient, uint256 _amount) public override returns (bool) {
         super.transferFrom(_sender, _recipient, _amount);
         _moveDelegates(_delegates[_sender], _delegates[_recipient], _amount);

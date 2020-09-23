@@ -155,4 +155,15 @@ contract StakingApplication {
         address account = AccountFactory(accountFactory).getAccount(msg.sender);
         return RewardedVault(vaults[_vaultId]).earned(account);
     }
+
+    /**
+     * @dev Return the amount of claim rewards.
+     * @param _vaultId ID of the vault to unstake.
+     */
+    function getClaimedReward(uint256 _vaultId) public view returns (uint256) {
+        require(vaults[_vaultId] != address(0x0), "no vault");
+
+        address account = AccountFactory(accountFactory).getAccount(msg.sender);
+        return RewardedVault(vaults[_vaultId]).claims(account);
+    }
 }

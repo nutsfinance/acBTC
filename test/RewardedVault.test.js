@@ -198,6 +198,9 @@ contract("RewardedVault", async ([owner, user1, user2, user3, user4]) => {
         assertAlmostEqual(await vault.earned(user1), web3.utils.toWei('38000'));
         assertAlmostEqual(await vault.earned(user2), web3.utils.toWei('0'));
         assertAlmostEqual(await vault.earned(user3), web3.utils.toWei('100000'));
+        assertAlmostEqual(await vault.claims(user1), web3.utils.toWei('0'));
+        assertAlmostEqual(await vault.claims(user2), web3.utils.toWei('78000'));
+        assertAlmostEqual(await vault.claims(user3), web3.utils.toWei('0'));
     });
 
     it('One staker on 2 durations with gap', async function () {
