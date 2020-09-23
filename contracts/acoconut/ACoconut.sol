@@ -2,6 +2,7 @@
 pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20Capped.sol";
 
 /**
  * @dev ACoconut token.
@@ -9,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * https://github.com/yam-finance/yam-protocol/blob/master/contracts/token/YAMGovernanceStorage.sol
  * https://github.com/yam-finance/yam-protocol/blob/master/contracts/token/YAMGovernance.sol
  */
-contract ACoconut is ERC20 {
+contract ACoconut is ERC20, ERC20Capped {
     
     address public governance;
     mapping(address => bool) public minters;
@@ -44,8 +45,15 @@ contract ACoconut is ERC20 {
     /// @notice An event thats emitted when a delegate account's vote balance changes
     event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
 
-    constructor() public ERC20("ACoconut", "AC") {
+    constructor() public ERC20("ACoconut", "AC") ERC20Capped(21000000 * 10 ** 18) {
         governance = msg.sender;
+    }
+
+    /**
+     * @dev See {ERC20Capped-_beforeTokenTransfer}.
+     */
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override(ERC20, ERC20Capped) {
+        ERC20Capped._beforeTokenTransfer(from, to, amount);
     }
 
     /**
@@ -56,21 +64,34 @@ contract ACoconut is ERC20 {
         governance = _governance;
     }
 
+    /**
+     * @dev Sets minter for AC token. Only minter can mint AC tokens.
+     * @param _user Address of the minter.
+     * @param _allowed Whether the user is accepted as a minter or not.
+     */
     function setMinter(address _user, bool _allowed) public {
         require(msg.sender == governance, "not governance");
         minters[_user] = _allowed;
     }
 
+    /**
+     * @dev Mints new AC tokens.
+     * @param _user Recipient of the minted AC token.
+     * @param _amount Amount of AC token to mint.
+     */
     function mint(address _user, uint256 _amount) public {
         require(minters[msg.sender], "not minter");
         _mint(_user, _amount);
         _moveDelegates(address(0), _delegates[_user], _amount);
     }
 
-    function burn(address _user, uint256 _amount) public {
-        require(minters[msg.sender], "not minter");
-        _burn(_user, _amount);
-        _moveDelegates(_delegates[_user], address(0), _amount);
+    /**
+     * @dev Burns AC token from the caller's account.
+     * @param _amount Amount of AC token to burn.
+     */
+    function burn(uint256 _amount) public {
+        _burn(msg.sender, _amount);
+        _moveDelegates(_delegates[msg.sender], address(0), _amount);
     }
 
     function transfer(address _recipient, uint256 _amount) public override returns (bool) {

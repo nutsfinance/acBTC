@@ -7,6 +7,11 @@ contract('ACoconut', async ([owner, minter1, minter2, user1, user2]) => {
     beforeEach(async () => {
         aCoconut = await ACoconut.new();
     });
+    it("should set parameters", async () => {
+        assert.equal(await aCoconut.name(), "ACoconut");
+        assert.equal(await aCoconut.symbol(), "AC");
+        assert.equal(await aCoconut.cap(), web3.utils.toWei('21000000'));
+    });
     it("should set governance", async () => {
         assert.equal(await aCoconut.governance(), owner);
         await expectRevert(aCoconut.setGovernance(user2, {from: user1}), "not governance");
@@ -25,11 +30,7 @@ contract('ACoconut', async ([owner, minter1, minter2, user1, user2]) => {
         await aCoconut.setMinter(minter1, true);
         await aCoconut.mint(user1, 1000, {from: minter1});
         assert.equal(await aCoconut.balanceOf(user1), 1000);
-        await aCoconut.burn(user1, 200, {from: minter1});
+        await aCoconut.burn(200, {from: user1});
         assert.equal(await aCoconut.balanceOf(user1), 800);
-    });
-    it("should not allow to mint or burn other than minters", async () => {
-        await expectRevert(aCoconut.mint(user1, 1000, {from: minter1}), "not minter");
-        await expectRevert(aCoconut.burn(user1, 200, {from: minter1}), "not minter");
     });
 });
