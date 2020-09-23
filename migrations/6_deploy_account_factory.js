@@ -2,11 +2,8 @@ const Account = artifacts.require("Account");
 const AccountFactory = artifacts.require("AccountFactory");
 
 const deployAccountFactory = async (deployer, accounts) => {
-    
     const account = (await Account.deployed()).address;
-    const accountFactory = await deployer.deploy(AccountFactory, account);
-    // const tx = await accountFactory.createAccount([accounts[1]]);
-    // console.log(tx);
+    await deployer.deploy(AccountFactory, account);
 }
 
 module.exports = function (deployer, network, accounts) {

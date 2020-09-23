@@ -28,6 +28,7 @@ contract StrategyACoconutBTC is IStrategy {
     constructor(address _vault) public {
         require(_vault != address(0x0), "vault not set");
         governance = msg.sender;
+        reserveRecipient = msg.sender;  // Initialize the reserve recipient to governance
         vault = _vault;
     }
 
