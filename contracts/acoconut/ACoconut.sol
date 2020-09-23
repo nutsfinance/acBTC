@@ -96,13 +96,13 @@ contract ACoconut is ERC20, ERC20Capped {
 
     function transfer(address _recipient, uint256 _amount) public override returns (bool) {
         super.transfer(_recipient, _amount);
-        _moveDelegates(msg.sender, _recipient, _amount);
+        _moveDelegates(_delegates[msg.sender], _delegates[_recipient], _amount);
         return true;
     }
 
     function transferFrom(address _sender, address _recipient, uint256 _amount) public override returns (bool) {
         super.transferFrom(_sender, _recipient, _amount);
-        _moveDelegates(_sender, _recipient, _amount);
+        _moveDelegates(_delegates[_sender], _delegates[_recipient], _amount);
         return true;
     }
 
