@@ -172,9 +172,9 @@ contract ACoconut is ERC20, ERC20Capped {
         );
 
         address signatory = ecrecover(digest, v, r, s);
-        require(signatory != address(0), "YAM::delegateBySig: invalid signature");
-        require(nonce == nonces[signatory]++, "YAM::delegateBySig: invalid nonce");
-        require(now <= expiry, "YAM::delegateBySig: signature expired");
+        require(signatory != address(0), "delegateBySig: invalid signature");
+        require(nonce == nonces[signatory]++, "delegateBySig: invalid nonce");
+        require(now <= expiry, "delegateBySig: signature expired");
         return _delegate(signatory, delegatee);
     }
 
@@ -204,7 +204,7 @@ contract ACoconut is ERC20, ERC20Capped {
         view
         returns (uint256)
     {
-        require(blockNumber < block.number, "YAM::getPriorVotes: not yet determined");
+        require(blockNumber < block.number, "getPriorVotes: not yet determined");
 
         uint32 nCheckpoints = numCheckpoints[account];
         if (nCheckpoints == 0) {
@@ -277,7 +277,7 @@ contract ACoconut is ERC20, ERC20Capped {
     )
         internal
     {
-        uint32 blockNumber = safe32(block.number, "YAM::_writeCheckpoint: block number exceeds 32 bits");
+        uint32 blockNumber = safe32(block.number, "_writeCheckpoint: block number exceeds 32 bits");
 
         if (nCheckpoints > 0 && checkpoints[delegatee][nCheckpoints - 1].fromBlock == blockNumber) {
             checkpoints[delegatee][nCheckpoints - 1].votes = newVotes;
