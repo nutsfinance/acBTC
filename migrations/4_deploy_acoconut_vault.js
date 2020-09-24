@@ -3,10 +3,13 @@ const MockRenCrv = artifacts.require("MockRenCrv");
 const ACoconut = artifacts.require("ACoconut");
 
 const deployACoconutVault = async (deployer, accounts) => {
-    // TODO Replace with real renCrv
-    const renCrv = (await deployer.deploy(MockRenCrv)).address;
-    const aCoconut = (await ACoconut.deployed()).address;
-    await deployer.deploy(ACoconutVault, 3600 * 14, aCoconut, renCrv);
+
+    let renCrv = '0x49849C98ae39Fff122806C06791Fa73784FB3675';  // want token
+    if (!process.env.MAINNET && !process.env.MAINNET_FORK) {
+        renCrv = (await deployer.deploy(MockRenCrv)).address;
+    }
+    const aCoconut = (await ACoconut.deployed()).address;   // reward token
+    await deployer.deploy(ACoconutVault, 3600 * 14, renCrv, aCoconut);
 }
 
 module.exports = function (deployer, network, accounts) {
