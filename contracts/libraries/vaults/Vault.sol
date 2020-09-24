@@ -9,6 +9,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./IStrategy.sol";
 
+/**
+ * @notice YEarn's style vault which earns yield for a specific token.
+ */
 contract Vault is ERC20 {
     using SafeERC20 for IERC20;
     using Address for address;
@@ -52,6 +55,7 @@ contract Vault is ERC20 {
      */
     function setStrategy(address _strategy) public {
         require(msg.sender == governance, "not governance");
+        // This also ensures that _strategy must be a valid strategy contract.
         require(address(token) == IStrategy(_strategy).want(), "different token");
 
         // If the vault has an existing strategy, withdraw all funds from it.
@@ -143,6 +147,7 @@ contract Vault is ERC20 {
     function salvage(address _tokenAddress, uint256 _amount) public {
         require(msg.sender == governance, "not governance");
         require(_tokenAddress != address(token), "cannot salvage");
+        require(_amount > 0, "zero amount");
         IERC20(_tokenAddress).safeTransfer(governance, _amount);
     }
 

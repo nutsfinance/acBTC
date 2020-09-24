@@ -70,7 +70,7 @@ contract StakingApplication {
     }
 
     /**
-     * @dev Stake token into ACoconutVault.
+     * @dev Stake token into rewarded vault.
      * @param _vaultId ID of the vault to stake.
      * @param _amount Amount of token to stake.
      */
@@ -135,8 +135,9 @@ contract StakingApplication {
      */
     function getStakeBalance(uint256 _vaultId) public view returns (uint256) {
         require(vaults[_vaultId] != address(0x0), "no vault");
-
         address account = AccountFactory(accountFactory).getAccount(msg.sender);
+        require(account != address(0x0), "no account");
+
         RewardedVault vault = RewardedVault(vaults[_vaultId]);
         uint256 totalBalance = vault.balance();
         uint256 totalSupply = vault.totalSupply();
@@ -151,8 +152,9 @@ contract StakingApplication {
      */
     function getUnclaimedReward(uint256 _vaultId) public view returns (uint256) {
         require(vaults[_vaultId] != address(0x0), "no vault");
-
         address account = AccountFactory(accountFactory).getAccount(msg.sender);
+        require(account != address(0x0), "no account");
+
         return RewardedVault(vaults[_vaultId]).earned(account);
     }
 
@@ -162,8 +164,9 @@ contract StakingApplication {
      */
     function getClaimedReward(uint256 _vaultId) public view returns (uint256) {
         require(vaults[_vaultId] != address(0x0), "no vault");
-
         address account = AccountFactory(accountFactory).getAccount(msg.sender);
+        require(account != address(0x0), "no account");
+        
         return RewardedVault(vaults[_vaultId]).claims(account);
     }
 }

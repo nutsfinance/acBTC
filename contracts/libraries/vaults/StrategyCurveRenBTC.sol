@@ -108,19 +108,31 @@ contract StrategyCurveRenBTC is IStrategy {
         }
     }
 
+    /**
+     * @dev Withdraw some tokens from the gauge.
+     */
     function _withdrawSome(uint256 _amount) internal returns (uint256) {
         ICurveGauge(pool).withdraw(_amount);
         return _amount;
     }
 
+    /**
+     * @dev Returns the amount of tokens deposited in the strategy.
+     */
     function balanceOfWant() public view returns (uint256) {
         return IERC20(want).balanceOf(address(this));
     }
 
+    /**
+     * @dev Returns the amount of tokens deposited in the gauge.
+     */
     function balanceOfPool() public view returns (uint256) {
         return ICurveGauge(pool).balanceOf(address(this));
     }
 
+    /**
+     * @dev Returns the amount of tokens deposited in strategy + gauge.
+     */
     function balanceOf() public view override returns (uint256) {
         return balanceOfWant().add(balanceOfPool());
     }

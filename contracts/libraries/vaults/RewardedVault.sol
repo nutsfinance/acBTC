@@ -32,7 +32,7 @@ contract RewardedVault is Vault {
     event RewardPaid(address indexed user, uint256 reward);
 
     constructor(address _vaultToken, address _rewardToken) public Vault(_vaultToken) {
-        require(_rewardToken != address(0x0), "RewardedVault: Reward token not set");
+        require(_rewardToken != address(0x0), "reward token not set");
         rewardToken = IERC20(_rewardToken);
     }
 
@@ -116,7 +116,7 @@ contract RewardedVault is Vault {
      * @param _reward Amount of reward token to add.
      */
     function addRewardAmount(uint256 _reward) public updateReward(address(0)) {
-        require(msg.sender == governance, "RewardedVault: Not governance");
+        require(msg.sender == governance, "not governance");
         rewardToken.safeTransferFrom(msg.sender, address(this), _reward);
 
         if (block.timestamp >= periodFinish) {
