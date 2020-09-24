@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../libraries/vaults/IStrategy.sol";
-import "./ACoconutExchange.sol";
+import "./ACoconutSwap.sol";
 
 /**
  * @notice Strategy to earn acBTC.
@@ -16,7 +16,7 @@ contract StrategyACoconutBTC is IStrategy {
     using SafeMath for uint256;
 
     address public constant override want = address(0x0); // To be added for acBTC token
-    address public constant exchange = address(0x0);    // To be added for ACoconutExchange
+    address public constant acSwap = address(0x0);    // To be added for ACoconutSwap
 
     address public governance;
     address public vault;
@@ -86,7 +86,7 @@ contract StrategyACoconutBTC is IStrategy {
      * @dev Claims yield and convert it back to want token.
      */
     function harvest() public override {
-        uint256 feeAmount = ACoconutExchange(exchange).collectFees();
+        uint256 feeAmount = ACoconutSwap(acSwap).collectFees();
         if (feeAmount > 0 && reserveRate > 0 && reserveRecipient != address(0x0)) {
             uint256 reserveAmount = feeAmount.mul(reserveRate).div(reserveRateMax);
             IERC20(want).safeTransfer(reserveRecipient, reserveAmount);

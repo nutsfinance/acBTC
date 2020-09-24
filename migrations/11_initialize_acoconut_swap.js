@@ -1,10 +1,10 @@
-const ACoconutExchange = artifacts.require("ACoconutExchange");
-const ACoconutExchangeProxy = artifacts.require("ACoconutExchangeProxy");
+const ACoconutSwap = artifacts.require("ACoconutSwap");
+const ACoconutSwapProxy = artifacts.require("ACoconutSwapProxy");
 const MockWBTC = artifacts.require("MockWBTC");
 const MockRenBTC = artifacts.require("MockRenBTC");
 const ACoconutBTC = artifacts.require("ACoconutBTC");
 
-const initializeACoconutExchange = async (deployer, accounts) => {
+const initializeACoconutSwap = async (deployer, accounts) => {
     // TODO Change to real address in production
     const wBTC = (await deployer.deploy(MockWBTC)).address;
     const renBTC = (await deployer.deploy(MockRenBTC)).address;
@@ -12,15 +12,15 @@ const initializeACoconutExchange = async (deployer, accounts) => {
 
     // TODO Change to a real address later
     const feeRecipient = accounts[1];
-    const aCoconutExchangeProxy = (await ACoconutExchangeProxy.deployed()).address;
-    const aCoconutExchange = await ACoconutExchange.at(aCoconutExchangeProxy);
+    const aCoconutSwapProxy = (await ACoconutSwapProxy.deployed()).address;
+    const aCoconutSwap = await ACoconutSwap.at(aCoconutSwapProxy);
 
-    await aCoconutExchange.initialize([wBTC, renBTC], [1, 1], [0, 0, 0], acBTC, feeRecipient, 100);
+    await aCoconutSwap.initialize([wBTC, renBTC], [1, 1], [0, 0, 0], acBTC, feeRecipient, 100);
 }
 
 module.exports = function (deployer, network, accounts) {
     deployer
-        .then(() => initializeACoconutExchange(deployer, accounts))
+        .then(() => initializeACoconutSwap(deployer, accounts))
         .catch(error => {
             console.log(error);
             process.exit(1);

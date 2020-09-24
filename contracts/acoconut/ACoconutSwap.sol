@@ -10,16 +10,16 @@ import "../libraries/upgradeability/Initializable.sol";
 import "./IPoolToken.sol";
 
 /**
- * @notice ACoconut exchange.
+ * @notice ACoconut swap.
  */
-contract ACoconutExchange is Initializable, ReentrancyGuard {
+contract ACoconutSwap is Initializable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     /**
-     * @dev Token exchanged between two underlying tokens.
+     * @dev Token swapped between two underlying tokens.
      */
-    event TokenExchanged(address indexed buyer, address indexed tokenSold, address indexed tokenBought, uint256 amountSold, uint256 amountBought);
+    event TokenSwapped(address indexed buyer, address indexed tokenSold, address indexed tokenBought, uint256 amountSold, uint256 amountBought);
     /**
      * @dev New pool token is minted.
      */
@@ -74,7 +74,7 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
         swapFee = _fees[1];
         redeemFee = _fees[2];
 
-        // The exchange must start with paused state!
+        // The swap must start with paused state!
         paused = true;
     }
 
@@ -210,7 +210,7 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
      */
     function mint(uint256[] calldata _amounts, uint256 _minMintAmount) external nonReentrant {
         uint256[] memory _balances = balances;
-        // If exchange is paused, only admins can mint.
+        // If swap is paused, only admins can mint.
         require(!paused || admins[msg.sender], "paused");
         require(_balances.length == _amounts.length, "invalid amounts");
 
@@ -250,11 +250,11 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
     }
 
     /**
-     * @dev Computes the output amount after the exchange.
-     * @param _i Token index to exchange in.
-     * @param _j Token index to exchange out.
-     * @param _dx Unconverted amount of token _i to exchange in.
-     * @return Unconverted amount of token _j to exchange out.
+     * @dev Computes the output amount after the swap.
+     * @param _i Token index to swap in.
+     * @param _j Token index to swap out.
+     * @param _dx Unconverted amount of token _i to swap in.
+     * @return Unconverted amount of token _j to swap out.
      */
     function getExchangeAmount(uint256 _i, uint256 _j, uint256 _dx) external view returns (uint256) {
         uint256[] memory _balances = balances;
@@ -280,14 +280,14 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
 
     /**
      * @dev Exchange between two underlying tokens.
-     * @param _i Token index to exchange in.
-     * @param _j Token index to exchange out.
-     * @param _dx Unconverted amount of token _i to exchange in.
-     * @param _minDy Minimum token _j to exchange out in converted balance.
+     * @param _i Token index to swap in.
+     * @param _j Token index to swap out.
+     * @param _dx Unconverted amount of token _i to swap in.
+     * @param _minDy Minimum token _j to swap out in converted balance.
      */
-    function exchange(uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external nonReentrant {
+    function swap(uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external nonReentrant {
         uint256[] memory _balances = balances;
-        // If exchange is paused, only admins can exchange.
+        // If swap is paused, only admins can swap.
         require(!paused || admins[msg.sender], "paused");
         require(_i != _j, "same token");
         require(_i < _balances.length, "invalid in");
@@ -316,7 +316,7 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
         // into pool token as fees!
         IERC20(tokens[_j]).safeTransfer(msg.sender, dy);
 
-        emit TokenExchanged(msg.sender, tokens[_i], tokens[_j], _dx, dy);
+        emit TokenSwapped(msg.sender, tokens[_i], tokens[_j], _dx, dy);
     }
 
     /**
@@ -352,7 +352,7 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
      */
     function redeem(uint256 _amount, uint256[] calldata _minRedeemAmounts) external nonReentrant {
         uint256[] memory _balances = balances;
-        // If exchange is paused, only admins can redeem.
+        // If swap is paused, only admins can redeem.
         require(!paused || admins[msg.sender], "paused");
         require(_amount > 0, "zero amount");
         require(_balances.length == _minRedeemAmounts.length, "invalid mins");
@@ -417,7 +417,7 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
      */
     function redeem(uint256 _amount, uint256 _i, uint256 _minRedeemAmount) external nonReentrant {
         uint256[] memory _balances = balances;
-        // If exchange is paused, only admins can redeem.
+        // If swap is paused, only admins can redeem.
         require(!paused || admins[msg.sender], "paused");
         require(_amount > 0, "zero amount");
         require(_i < _balances.length, "invalid token");
@@ -483,7 +483,7 @@ contract ACoconutExchange is Initializable, ReentrancyGuard {
     function redeemTokens(uint256[] calldata _amounts, uint256 _maxRedeemAmount) external nonReentrant {
         uint256[] memory _balances = balances;
         require(_amounts.length == balances.length, "length not match");
-        // If exchange is paused, only admins can redeem.
+        // If swap is paused, only admins can redeem.
         require(!paused || admins[msg.sender], "paused");
         
         uint256 A = getA();
