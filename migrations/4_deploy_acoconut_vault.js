@@ -12,7 +12,6 @@ const deployACoconutVault = async (deployer, accounts) => {
     const aCoconut = (await ACoconut.deployed()).address;   // reward token
     const current = (await time.latest()).toNumber();
     console.log("Deploying ACoconutVault...");
-    console.log(current + 3600 * 24 * 15, renCrv, aCoconut);
     await deployer.deploy(ACoconutVault, current + 3600 * 24 * 15, renCrv, aCoconut);   // Can migrate after 15 days
 }
 
