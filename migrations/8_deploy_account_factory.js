@@ -3,6 +3,7 @@ const AccountFactory = artifacts.require("AccountFactory");
 
 const deployAccountFactory = async (deployer, accounts) => {
     const account = (await Account.deployed()).address;
+    console.log("Deploying AccountFactory...");
     await deployer.deploy(AccountFactory, account);
 }
 

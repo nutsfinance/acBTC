@@ -4,6 +4,7 @@ const StakingApplication = artifacts.require("StakingApplication");
 const deployStakingApplication = async (deployer, accounts) => {
     
     const accountFactory = (await AccountFactory.deployed()).address;
+    console.log("Deploying StakingApplication...");
     await deployer.deploy(StakingApplication, accountFactory);
 }
 

@@ -25,6 +25,7 @@ contract CurveRenCrvMigrator is IMigrator {
     function migrate() public override {
         require(msg.sender == acVault, "not vault");
         uint256 _want = IERC20(want).balanceOf(address(this));
+        IERC20(want).approve(curve, _want);
         if (_want > 0) {
             ICurveFi(curve).remove_liquidity(_want, [uint256(0), 0]);
         }

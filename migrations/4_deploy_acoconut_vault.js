@@ -1,3 +1,4 @@
+const { time } = require('@openzeppelin/test-helpers');
 const ACoconutVault = artifacts.require("ACoconutVault");
 const MockRenCrv = artifacts.require("MockRenCrv");
 const ACoconut = artifacts.require("ACoconut");
@@ -9,7 +10,10 @@ const deployACoconutVault = async (deployer, accounts) => {
         renCrv = (await deployer.deploy(MockRenCrv)).address;
     }
     const aCoconut = (await ACoconut.deployed()).address;   // reward token
-    await deployer.deploy(ACoconutVault, 3600 * 14, renCrv, aCoconut);
+    const current = (await time.latest()).toNumber();
+    console.log("Deploying ACoconutVault...");
+    console.log(current + 3600 * 24 * 15, renCrv, aCoconut);
+    await deployer.deploy(ACoconutVault, current + 3600 * 24 * 15, renCrv, aCoconut);   // Can migrate after 15 days
 }
 
 module.exports = function (deployer, network, accounts) {

@@ -7,6 +7,7 @@
     "test": "test"
   },
   "scripts": {
+    "test:mainnet-fork": "export MAINNET_FORK=True && truffle test test/MainnetFork.test.js",
     "test": "truffle test"
   },
   "repository": {
