@@ -63,12 +63,4 @@ contract AccountFactory {
 
         return account;
     }
-
-    /**
-     * @dev Retrives the active account for a user. The active account is the last account created.
-     * @param _user Address of the owner of the Account contract.
-     */
-    function getAccount(address _user) public view returns (address) {
-         return accounts[_user];
-    }
 }

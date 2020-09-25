@@ -62,7 +62,7 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
     it("should be able to stake and unstake", async () => {
         await stakingApplication.addVault(aCoconutVault.address);
         await accountFactory.createAccount([stakingApplication.address], {from: user1});
-        const account = await accountFactory.getAccount(user1);
+        const account = await accountFactory.accounts(user1);
         await renCrv.mint(account, 2000);
         assert.equal(await renCrv.balanceOf(account), 2000);
 
@@ -79,7 +79,7 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
     it("should be able to get rewards", async () => {
         await stakingApplication.addVault(aCoconutVault.address);
         await accountFactory.createAccount([stakingApplication.address], {from: user1});
-        const account = await accountFactory.getAccount(user1);
+        const account = await accountFactory.accounts(user1);
         await renCrv.mint(account, 2000);
         assert.equal(await renCrv.balanceOf(account), 2000);
 

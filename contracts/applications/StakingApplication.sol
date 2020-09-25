@@ -61,7 +61,7 @@ contract StakingApplication {
      * @dev Retrieve the active account of the user.
      */
     function _getAccount() internal view returns (Account) {
-        address _account = AccountFactory(accountFactory).getAccount(msg.sender);
+        address _account = AccountFactory(accountFactory).accounts(msg.sender);
         require(_account != address(0x0), "no account");
         Account account = Account(payable(_account));
         require(account.isOperator(address(this)), "not operator");
@@ -135,7 +135,7 @@ contract StakingApplication {
      */
     function getStakeBalance(uint256 _vaultId) public view returns (uint256) {
         require(vaults[_vaultId] != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).getAccount(msg.sender);
+        address account = AccountFactory(accountFactory).accounts(msg.sender);
         require(account != address(0x0), "no account");
 
         RewardedVault vault = RewardedVault(vaults[_vaultId]);
@@ -152,7 +152,7 @@ contract StakingApplication {
      */
     function getUnclaimedReward(uint256 _vaultId) public view returns (uint256) {
         require(vaults[_vaultId] != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).getAccount(msg.sender);
+        address account = AccountFactory(accountFactory).accounts(msg.sender);
         require(account != address(0x0), "no account");
 
         return RewardedVault(vaults[_vaultId]).earned(account);
@@ -164,7 +164,7 @@ contract StakingApplication {
      */
     function getClaimedReward(uint256 _vaultId) public view returns (uint256) {
         require(vaults[_vaultId] != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).getAccount(msg.sender);
+        address account = AccountFactory(accountFactory).accounts(msg.sender);
         require(account != address(0x0), "no account");
         
         return RewardedVault(vaults[_vaultId]).claims(account);

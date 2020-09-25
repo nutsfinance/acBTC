@@ -31,7 +31,7 @@ contract("AccountFactory", async ([deployer, owner, admin1, admin2, admin3, user
     });
     it("should be able to create new account", async () => {
         await accountFactory.createAccount([admin1, admin2], {from: owner});
-        const account = await Account.at(await accountFactory.getAccount(owner));
+        const account = await Account.at(await accountFactory.accounts(owner));
         assert.equal(await account.owner(), owner);
         assert.equal(await account.admins(admin1), true);
         assert.equal(await account.admins(admin2), true);
@@ -39,9 +39,9 @@ contract("AccountFactory", async ([deployer, owner, admin1, admin2, admin3, user
     });
     it("should be able to create another account", async () => {
         await accountFactory.createAccount([admin1, admin2], {from: user1});
-        const account1 = await Account.at(await accountFactory.getAccount(user1));
+        const account1 = await Account.at(await accountFactory.accounts(user1));
         await accountFactory.createAccount([admin1, admin3], {from: user1});
-        const account2 = await Account.at(await accountFactory.getAccount(user1));
+        const account2 = await Account.at(await accountFactory.accounts(user1));
         assert.notEqual(account1, account2);
         assert.equal(await account2.owner(), user1);
         assert.equal(await account2.admins(admin1), true);
