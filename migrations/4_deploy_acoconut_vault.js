@@ -12,7 +12,7 @@ const deployACoconutVault = async (deployer, accounts) => {
     const aCoconut = (await ACoconut.deployed()).address;   // reward token
     const current = (await time.latest()).toNumber();
     console.log("Deploying ACoconutVault...");
-    await deployer.deploy(ACoconutVault, current + 3600 * 24 * 15, renCrv, aCoconut);   // Can migrate after 15 days
+    await deployer.deploy(ACoconutVault, current + 3600 * 24 * 15, renCrv, aCoconut, "ACoconut BTC Vault Token", "acBTCv");   // Can migrate after 15 days
 }
 
 module.exports = function (deployer, network, accounts) {

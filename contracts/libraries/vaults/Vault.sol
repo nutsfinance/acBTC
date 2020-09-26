@@ -24,12 +24,7 @@ contract Vault is ERC20 {
     event Deposited(address indexed user, address indexed token, uint256 amount, uint256 shareAmount);
     event Withdrawn(address indexed user, address indexed token, uint256 amount, uint256 shareAmount);
 
-    constructor(address _token) public
-        ERC20(
-            string(abi.encodePacked("ACoconut ", ERC20(_token).name())),
-            string(abi.encodePacked("ac", ERC20(_token).symbol()))
-        )
-    {
+    constructor(address _token, string memory _name, string memory _symbol) public ERC20(_name, _symbol) {
         token = IERC20(_token);
         governance = msg.sender;
     }

@@ -11,7 +11,7 @@ contract("Vault", async ([owner, user, user2, user3]) => {
 
     beforeEach(async () => {
         token = await MockToken.new();
-        vault = await Vault.new(token.address);
+        vault = await Vault.new(token.address, "Mock Token Vault Token", "Mockv");
         strategy = await Strategy.new(token.address, vault.address);
     });
     it("should set governance", async () => {

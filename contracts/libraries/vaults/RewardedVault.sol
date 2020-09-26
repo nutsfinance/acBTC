@@ -31,7 +31,7 @@ contract RewardedVault is Vault {
     event RewardAdded(uint256 reward);
     event RewardPaid(address indexed user, uint256 reward);
 
-    constructor(address _vaultToken, address _rewardToken) public Vault(_vaultToken) {
+    constructor(address _vaultToken, address _rewardToken, string memory _name, string memory _symbol) public Vault(_vaultToken, _name, _symbol) {
         require(_rewardToken != address(0x0), "reward token not set");
         rewardToken = IERC20(_rewardToken);
     }

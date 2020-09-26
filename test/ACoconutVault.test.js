@@ -15,7 +15,7 @@ contract('ACoconutBTC', async ([owner, user1, user2]) => {
         renCrv = await RenCrv.new();
         aCoconutBTC = await ACoconutBTC.new();
         migrationDue = (await time.latest()).toNumber() + 3600;
-        aCoconutVault = await ACoconutVault.new(migrationDue, renCrv.address, aCoconutBTC.address);
+        aCoconutVault = await ACoconutVault.new(migrationDue, renCrv.address, aCoconutBTC.address, "ACoconut BTC Vault Token", "acBTCv");
         migrator = await Migrator.new(renCrv.address, aCoconutBTC.address, aCoconutVault.address);
     });
     it("should initialize params properly", async () => {

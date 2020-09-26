@@ -29,7 +29,7 @@ contract("RewardedVault", async ([owner, user1, user2, user3, user4]) => {
     beforeEach(async () => {
         token = await MockToken.new();
         rewardToken = await MockRewardToken.new();
-        vault = await RewardedVault.new(token.address, rewardToken.address);
+        vault = await RewardedVault.new(token.address, rewardToken.address, "Mock Token Vault Token", "Mockv");
         strategy = await Strategy.new(token.address, vault.address);
         await vault.setStrategy(strategy.address);
 

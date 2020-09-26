@@ -26,7 +26,8 @@ contract ACoconutVault is RewardedVault {
     // The contract that performs the migration.
     address public migrator;
 
-    constructor(uint256 _migrationDue, address _vaultToken, address _rewardToken) public RewardedVault(_vaultToken, _rewardToken) {
+    constructor(uint256 _migrationDue, address _vaultToken, address _rewardToken, string memory _name,
+        string memory _symbol) public RewardedVault(_vaultToken, _rewardToken, _name, _symbol) {
         migrationDue = _migrationDue;
     }
 
