@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 pragma solidity 0.6.8;
 
 import './BaseUpgradeabilityProxy.sol';
@@ -59,14 +59,14 @@ contract AdminUpgradeabilityProxy is BaseUpgradeabilityProxy {
   /**
    * @return The address of the proxy admin.
    */
-  function admin() external view returns (address) {
+  function admin() external ifAdmin returns (address) {
     return _admin();
   }
 
   /**
    * @return The address of the implementation.
    */
-  function implementation() external view returns (address) {
+  function implementation() external ifAdmin returns (address) {
     return _implementation();
   }
 

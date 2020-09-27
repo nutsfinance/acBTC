@@ -19,7 +19,7 @@
     "acBTC"
   ],
   "author": "tech@nuts.finance",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/nutsfinance/acBTC/issues"
   },
