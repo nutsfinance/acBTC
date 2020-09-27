@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+import "./Controller.sol";
 import "./Vault.sol";
 
 /**
@@ -18,7 +19,7 @@ contract RewardedVault is Vault {
     using Address for address;
     using SafeMath for uint256;
 
-    IERC20 public rewardToken;
+    address public controller;
     uint256 public constant DURATION = 7 days;      // Rewards are vested for a fixed duration of 7 days.
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
@@ -28,12 +29,23 @@ contract RewardedVault is Vault {
     mapping(address => uint256) public rewards;
     mapping(address => uint256) public claims;
 
-    event RewardAdded(uint256 reward);
-    event RewardPaid(address indexed user, uint256 reward);
+    event RewardAdded(address indexed rewardToken, uint256 rewardAmount);
+    event RewardPaid(address indexed rewardToken, address indexed user, uint256 rewardAmount);
 
-    constructor(address _vaultToken, address _rewardToken, string memory _name, string memory _symbol) public Vault(_vaultToken, _name, _symbol) {
-        require(_rewardToken != address(0x0), "reward token not set");
-        rewardToken = IERC20(_rewardToken);
+    constructor(string memory _name, string memory _symbol, address _controller, address _vaultToken) public Vault(_name, _symbol, _vaultToken) {
+        require(_controller != address(0x0), "controller not set");
+
+        controller = _controller;
+    }
+
+    /**
+     * @dev Updates the controller address. Controller is responsible for reward distribution.
+     */
+    function setController(address _controller) public {
+        require(msg.sender == governance, "not governance");
+        require(_controller != address(0x0), "controller not set");
+
+        controller = _controller;
     }
 
     modifier updateReward(address _account) {
@@ -104,20 +116,20 @@ contract RewardedVault is Vault {
         if (reward > 0) {
             claims[msg.sender] = claims[msg.sender].add(reward);
             rewards[msg.sender] = 0;
-            rewardToken.safeTransfer(msg.sender, reward);
-            emit RewardPaid(msg.sender, reward);
+            address rewardToken = Controller(controller).rewardToken();
+            IERC20(rewardToken).safeTransfer(msg.sender, reward);
+            emit RewardPaid(rewardToken, msg.sender, reward);
         }
 
         return reward;
     }
 
     /**
-     * @dev Add new rewards to the vault. All rewards will be distributed linearly in 7 days.
+     * @dev Notifies the vault that new reward is added. All rewards will be distributed linearly in 7 days.
      * @param _reward Amount of reward token to add.
      */
-    function addRewardAmount(uint256 _reward) public updateReward(address(0)) {
-        require(msg.sender == governance, "not governance");
-        rewardToken.safeTransferFrom(msg.sender, address(this), _reward);
+    function notifyRewardAmount(uint256 _reward) public updateReward(address(0)) {
+        require(msg.sender == controller, "not controller");
 
         if (block.timestamp >= periodFinish) {
             rewardRate = _reward.div(DURATION);
@@ -128,6 +140,8 @@ contract RewardedVault is Vault {
         }
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(DURATION);
-        emit RewardAdded(_reward);
+        address rewardToken = Controller(controller).rewardToken();
+
+        emit RewardAdded(rewardToken, _reward);
     }
 }

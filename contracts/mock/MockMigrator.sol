@@ -3,7 +3,7 @@ pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "../acoconut/IMigrator.sol";
+import "../libraries/interfaces/IMigrator.sol";
 import "../mock/MockToken.sol";
 
 /**

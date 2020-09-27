@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "../libraries/upgradeability/Initializable.sol";
-import "./IPoolToken.sol";
+import "../libraries/interfaces/IERC20MintableBurnable.sol";
 
 /**
  * @notice ACoconut swap.
@@ -243,8 +243,8 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             balances[i] = _balances[i];
             IERC20(tokens[i]).safeTransferFrom(msg.sender, address(this), _amounts[i]);
         }
-        IPoolToken(poolToken).mint(feeRecipient, feeAmount);
-        IPoolToken(poolToken).mint(msg.sender, mintAmount);
+        IERC20MintableBurnable(poolToken).mint(feeRecipient, feeAmount);
+        IERC20MintableBurnable(poolToken).mint(msg.sender, mintAmount);
 
         emit Minted(msg.sender, mintAmount, _amounts, feeAmount);
     }
@@ -382,7 +382,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             IERC20(tokens[i]).safeTransfer(msg.sender, amounts[i]);
         }
 
-        IPoolToken(poolToken).burn(msg.sender, _amount);
+        IERC20MintableBurnable(poolToken).burn(msg.sender, _amount);
 
         emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
     }
@@ -443,7 +443,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         amounts[_i] = dy;
 
         IERC20(tokens[_i]).safeTransfer(msg.sender, dy);
-        IPoolToken(poolToken).burn(msg.sender, _amount.add(feeAmount));
+        IERC20MintableBurnable(poolToken).burn(msg.sender, _amount.add(feeAmount));
 
         emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
     }
@@ -510,7 +510,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
 
         // Updates token balances in storage.
         balances = _balances;
-        IPoolToken(poolToken).burn(msg.sender, redeemAmount);
+        IERC20MintableBurnable(poolToken).burn(msg.sender, redeemAmount);
         for (i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0)   continue;
             IERC20(tokens[i]).safeTransfer(msg.sender, _amounts[i]);
@@ -537,7 +537,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
 
         balances = _balances;
         address _feeRecipient = feeRecipient;
-        IPoolToken(poolToken).mint(_feeRecipient, feeAmount);
+        IERC20MintableBurnable(poolToken).mint(_feeRecipient, feeAmount);
 
         emit FeeCollected(_feeRecipient, feeAmount);
 

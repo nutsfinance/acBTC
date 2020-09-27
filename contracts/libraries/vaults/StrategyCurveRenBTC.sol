@@ -2,7 +2,6 @@
 pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -10,16 +9,16 @@ import "../curve/ICurveFi.sol";
 import "../curve/ICurveGauge.sol";
 import "../curve/ICurveMinter.sol";
 import "../uniswap/IUniswapRouter.sol";
-
-import "./IStrategy.sol";
+import "../interfaces/IStrategy.sol";
 
 /**
  * @dev Earning strategy that accepts renCRV, earns CRV and converts CRV back to renCRV as yield.
  */
 contract StrategyCurveRenBTC is IStrategy {
     using SafeERC20 for IERC20;
-    using Address for address;
     using SafeMath for uint256;
+
+    event Harvested(address indexed token, uint256 amount);
 
     address public constant override want = address(0x49849C98ae39Fff122806C06791Fa73784FB3675); // renCrv token
     address public constant pool = address(0xB1F2cdeC61db658F091671F5f199635aEF202CAC); // renCrv guage
@@ -106,6 +105,8 @@ contract StrategyCurveRenBTC is IStrategy {
         if (_want > 0) {
             deposit();
         }
+
+        emit Harvested(want, _want);
     }
 
     /**

@@ -2,21 +2,19 @@
 pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "../libraries/vaults/IStrategy.sol";
 import "../libraries/vaults/RewardedVault.sol";
-import "./IMigrator.sol";
+import "../libraries/interfaces/IStrategy.sol";
+import "../libraries/interfaces/IMigrator.sol";
 
 /**
  * @notice A rewarded vault that could perform token migration.
  */
 contract ACoconutVault is RewardedVault {
     using SafeERC20 for IERC20;
-    using Address for address;
     using SafeMath for uint256;
 
     // When the vault can be migrated.
@@ -26,8 +24,8 @@ contract ACoconutVault is RewardedVault {
     // The contract that performs the migration.
     address public migrator;
 
-    constructor(uint256 _migrationDue, address _vaultToken, address _rewardToken, string memory _name,
-        string memory _symbol) public RewardedVault(_vaultToken, _rewardToken, _name, _symbol) {
+    constructor(string memory _name, string memory _symbol, address _controller, address _vaultToken, uint256 _migrationDue)
+        public RewardedVault(_name, _symbol, _controller, _vaultToken) {
         migrationDue = _migrationDue;
     }
 

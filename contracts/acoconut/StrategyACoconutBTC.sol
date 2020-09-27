@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "../libraries/vaults/IStrategy.sol";
+import "../libraries/interfaces/IStrategy.sol";
 import "./ACoconutSwap.sol";
 
 /**

@@ -4,11 +4,10 @@ pragma solidity 0.6.8;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
- * @notice Interface for the pool token.
+ * @notice Interface for ERC20 token which supports minting new tokens.
  */
-interface IPoolToken is IERC20 {
+interface IERC20Mintable is IERC20 {
     
     function mint(address _user, uint256 _amount) external;
 
-    function burn(address _user, uint256 _amount) external;
 }

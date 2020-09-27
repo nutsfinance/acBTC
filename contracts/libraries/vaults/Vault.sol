@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "./IStrategy.sol";
+import "../interfaces/IStrategy.sol";
 
 /**
  * @notice YEarn's style vault which earns yield for a specific token.
@@ -24,7 +24,7 @@ contract Vault is ERC20 {
     event Deposited(address indexed user, address indexed token, uint256 amount, uint256 shareAmount);
     event Withdrawn(address indexed user, address indexed token, uint256 amount, uint256 shareAmount);
 
-    constructor(address _token, string memory _name, string memory _symbol) public ERC20(_name, _symbol) {
+    constructor(string memory _name, string memory _symbol, address _token) public ERC20(_name, _symbol) {
         token = IERC20(_token);
         governance = msg.sender;
     }
