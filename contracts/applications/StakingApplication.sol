@@ -180,8 +180,6 @@ contract StakingApplication {
     function getVaultBalance(uint256 _vaultId) public view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).accounts(msg.sender);
-        require(account != address(0x0), "no account");
 
         RewardedVault vault = RewardedVault(_vault);
         return vault.balance();

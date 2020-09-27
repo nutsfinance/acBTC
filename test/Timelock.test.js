@@ -14,9 +14,9 @@ contract("Timelock", async ([owner, admin, newAdmin, user]) => {
     it("should initialize parameters", async () => {
         console.log(await timelock.admin());
         console.log();
-        assert.equal(await timelock.admin(), admin);
-        assert.equal(await timelock.delay(), delay);
-        assert.equal(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
+        assert.strictEqual(await timelock.admin(), admin);
+        assert.strictEqual((await timelock.delay()).toNumber(), delay);
+        assert.strictEqual(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
     });
     it("should only allow timelock to set delay", async () => {
         await expectRevert(timelock.setDelay(delay), "Timelock::setDelay: Call must come from Timelock.");
@@ -43,9 +43,9 @@ contract("Timelock", async ([owner, admin, newAdmin, user]) => {
         const eta = (await time.latest()) + delay + 1000;
         const txHash = web3.utils.soliditySha3(web3.eth.abi.encodeParameters(['address','uint256','string','bytes','uint256'],
             [timelock.address, 0, 'setDelay(uint256)', data, eta]));
-        assert.equal(await timelock.queuedTransactions(txHash), false);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), false);
         await timelock.queueTransaction(timelock.address, 0, 'setDelay(uint256)', data, eta, {from: admin});
-        assert.equal(await timelock.queuedTransactions(txHash), true);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), true);
     });
     it("should require admin to cancel transactions", async () => {
         const data = web3.eth.abi.encodeParameter('uint256', newDelay);
@@ -61,11 +61,11 @@ contract("Timelock", async ([owner, admin, newAdmin, user]) => {
         const eta = (await time.latest()) + delay + 1000;
         const txHash = web3.utils.soliditySha3(web3.eth.abi.encodeParameters(['address','uint256','string','bytes','uint256'],
             [timelock.address, 0, 'setDelay(uint256)', data, eta]));
-        assert.equal(await timelock.queuedTransactions(txHash), false);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), false);
         await timelock.queueTransaction(timelock.address, 0, 'setDelay(uint256)', data, eta, {from: admin});
-        assert.equal(await timelock.queuedTransactions(txHash), true);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), true);
         await timelock.cancelTransaction(timelock.address, 0, 'setDelay(uint256)', data, eta, {from: admin});
-        assert.equal(await timelock.queuedTransactions(txHash), false);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), false);
     });
     it("should require admin to execute transactions", async () => {
         const data = web3.eth.abi.encodeParameter('uint256', newDelay);
@@ -90,28 +90,28 @@ contract("Timelock", async ([owner, admin, newAdmin, user]) => {
         const eta = (await time.latest()).toNumber() + delay + 1000;
         const txHash = web3.utils.soliditySha3(web3.eth.abi.encodeParameters(['address','uint256','string','bytes','uint256'],
             [timelock.address, 0, 'setDelay(uint256)', data, eta]));
-        assert.equal(await timelock.queuedTransactions(txHash), false);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), false);
         await timelock.queueTransaction(timelock.address, 0, 'setDelay(uint256)', data, eta, {from: admin});
-        assert.equal(await timelock.queuedTransactions(txHash), true);
-        assert.equal(await timelock.delay(), delay);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), true);
+        assert.strictEqual((await timelock.delay()).toNumber(), delay);
         await time.increaseTo(eta + 100);
         await timelock.executeTransaction(timelock.address, 0, 'setDelay(uint256)', data, eta, {from: admin});
-        assert.equal(await timelock.queuedTransactions(txHash), false);
-        assert.equal(await timelock.delay(), newDelay);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), false);
+        assert.strictEqual((await timelock.delay()).toNumber(), newDelay);
     });
     it("should allow timelock to set pending admin", async () => {
         const data = web3.eth.abi.encodeParameter('address', newAdmin);
         const eta = (await time.latest()).toNumber() + delay + 1000;
         const txHash = web3.utils.soliditySha3(web3.eth.abi.encodeParameters(['address','uint256','string','bytes','uint256'],
             [timelock.address, 0, 'setPendingAdmin(address)', data, eta]));
-        assert.equal(await timelock.queuedTransactions(txHash), false);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), false);
         await timelock.queueTransaction(timelock.address, 0, 'setPendingAdmin(address)', data, eta, {from: admin});
-        assert.equal(await timelock.queuedTransactions(txHash), true);
-        assert.equal(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
+        assert.strictEqual(await timelock.queuedTransactions(txHash), true);
+        assert.strictEqual(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
         await time.increaseTo(eta + 100);
         await timelock.executeTransaction(timelock.address, 0, 'setPendingAdmin(address)', data, eta, {from: admin});
-        assert.equal(await timelock.queuedTransactions(txHash), false);
-        assert.equal(await timelock.pendingAdmin(), newAdmin);
+        assert.strictEqual(await timelock.queuedTransactions(txHash), false);
+        assert.strictEqual(await timelock.pendingAdmin(), newAdmin);
     });
     it("should only allow pending admin to accept admin", async () => {
         const data = web3.eth.abi.encodeParameter('address', newAdmin);
@@ -119,10 +119,10 @@ contract("Timelock", async ([owner, admin, newAdmin, user]) => {
         const txHash = web3.utils.soliditySha3(web3.eth.abi.encodeParameters(['address','uint256','string','bytes','uint256'],
             [timelock.address, 0, 'setPendingAdmin(address)', data, eta]));
         await timelock.queueTransaction(timelock.address, 0, 'setPendingAdmin(address)', data, eta, {from: admin});
-        assert.equal(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
+        assert.strictEqual(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
         await time.increaseTo(eta + 100);
         await timelock.executeTransaction(timelock.address, 0, 'setPendingAdmin(address)', data, eta, {from: admin});
-        assert.equal(await timelock.pendingAdmin(), newAdmin);
+        assert.strictEqual(await timelock.pendingAdmin(), newAdmin);
 
         await expectRevert(timelock.acceptAdmin({from: admin}), "Timelock::acceptAdmin: Call must come from pendingAdmin.");
     });
@@ -133,14 +133,14 @@ contract("Timelock", async ([owner, admin, newAdmin, user]) => {
         const txHash = web3.utils.soliditySha3(web3.eth.abi.encodeParameters(['address','uint256','string','bytes','uint256'],
             [timelock.address, 0, 'setPendingAdmin(address)', data, eta]));
         await timelock.queueTransaction(timelock.address, 0, 'setPendingAdmin(address)', data, eta, {from: admin});
-        assert.equal(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
+        assert.strictEqual(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
         await time.increaseTo(eta + 100);
         await timelock.executeTransaction(timelock.address, 0, 'setPendingAdmin(address)', data, eta, {from: admin});
         
-        assert.equal(await timelock.admin(), admin);
-        assert.equal(await timelock.pendingAdmin(), newAdmin);
+        assert.strictEqual(await timelock.admin(), admin);
+        assert.strictEqual(await timelock.pendingAdmin(), newAdmin);
         await timelock.acceptAdmin({from: newAdmin});
-        assert.equal(await timelock.admin(), newAdmin);
-        assert.equal(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
+        assert.strictEqual(await timelock.admin(), newAdmin);
+        assert.strictEqual(await timelock.pendingAdmin(), '0x0000000000000000000000000000000000000000');
     });
 });

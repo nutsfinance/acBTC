@@ -15,6 +15,7 @@ contract Controller {
 
     address public governance;
     address public rewardToken;
+    address public reserve;
     uint256 public numVaults;
     mapping(uint256 => address) public vaults;
 
@@ -22,6 +23,7 @@ contract Controller {
         require(_rewardToken != address(0x0), "reward token not set");
         
         governance = msg.sender;
+        reserve = msg.sender;
         rewardToken = _rewardToken;
     }
 
@@ -41,6 +43,16 @@ contract Controller {
         require(_rewardToken != address(0x0), "reward token not set");
 
         rewardToken = _rewardToken;
+    }
+
+    /**
+     * @dev Updates the reserve address.
+     */
+    function setReserve(address _reserve) public {
+        require(msg.sender == governance, "not governance");
+        require(_reserve != address(0x0), "reserve not set");
+
+        reserve = _reserve;
     }
 
     /**
@@ -66,7 +78,7 @@ contract Controller {
         address vault = vaults[_vaultId];
         IERC20Mintable(rewardToken).mint(vault, _rewardAmount);
         // Mint 40% of tokens to governance.
-        IERC20Mintable(rewardToken).mint(governance, _rewardAmount.mul(2).div(5));
+        IERC20Mintable(rewardToken).mint(reserve, _rewardAmount.mul(2).div(5));
         RewardedVault(vault).notifyRewardAmount(_rewardAmount);
     }
 
