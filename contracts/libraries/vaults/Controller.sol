@@ -5,16 +5,17 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../interfaces/IERC20Mintable.sol";
 import "../interfaces/IStrategy.sol";
+import "../interfaces/IController.sol";
 import "./RewardedVault.sol";
 
 /**
  * @notice Controller for vaults.
  */
-contract Controller {
+contract Controller is IController {
     using SafeMath for uint256;
 
+    address public override rewardToken;
     address public governance;
-    address public rewardToken;
     address public reserve;
     uint256 public numVaults;
     mapping(uint256 => address) public vaults;

@@ -7,7 +7,7 @@ const ACoconutBTC = artifacts.require("MockWBTC");
 const Migrator = artifacts.require("MockMigrator");
 const assert = require('assert');
 
-contract('ACoconutBTC', async ([owner, user1, user2]) => {
+contract('ACoconutVault', async ([owner, user1, user2]) => {
     let renCrv;
     let aCoconut;
     let aCoconutBTC;

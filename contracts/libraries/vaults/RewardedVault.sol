@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "./Controller.sol";
+import "../interfaces/IController.sol";
 import "./Vault.sol";
 
 /**
@@ -116,7 +116,7 @@ contract RewardedVault is Vault {
         if (reward > 0) {
             claims[msg.sender] = claims[msg.sender].add(reward);
             rewards[msg.sender] = 0;
-            address rewardToken = Controller(controller).rewardToken();
+            address rewardToken = IController(controller).rewardToken();
             IERC20(rewardToken).safeTransfer(msg.sender, reward);
             emit RewardPaid(rewardToken, msg.sender, reward);
         }
@@ -141,6 +141,6 @@ contract RewardedVault is Vault {
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(DURATION);
 
-        emit RewardAdded(Controller(controller).rewardToken(), _reward);
+        emit RewardAdded(IController(controller).rewardToken(), _reward);
     }
 }
