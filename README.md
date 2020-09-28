@@ -25,9 +25,9 @@
   - [**StrategyCurveRenBTC**](./contracts/libraries/vaults/StrategyCurveRenBTC.sol): An earning strategy for Curve.fi's renCrv vault.
   
 ## Beta Environment
-- ACoconut: [0xb74e3ca8401B5b9E09d46B4000f869231f2f4A79](https://etherscan.io/address/0x6fc74994b7fccd054759fd70459c850dfb7c3b31)
-- ACoconutBTC: [0xb74e3ca8401B5b9E09d46B4000f869231f2f4A79](https://etherscan.io/address/0xb74e3ca8401B5b9E09d46B4000f869231f2f4A79)
-- ACoconutVault: [0xE5B5C8D47E9E1910D69C113a02d55c2091Bf06D1](https://etherscan.io/address/0xE5B5C8D47E9E1910D69C113a02d55c2091Bf06D1)
-- StrategyCurveRenBTC: [0x32A43c918e6a814263bc9509C06fa83cE9E5139b](https://etherscan.io/address/0x32A43c918e6a814263bc9509C06fa83cE9E5139b)
-- AccountFactory: [0x27ee601bf94969f112487FF13acb6856Ec86C8A2](https://etherscan.io/address/0x27ee601bf94969f112487FF13acb6856Ec86C8A2)
-- StakingApplication: [0xBfE13cB6e2731e4740424804e86E5D8251E4CaE5](https://etherscan.io/address/0xBfE13cB6e2731e4740424804e86E5D8251E4CaE5)
+- ACoconut: [0xD104F7479117209c1B885390500f29110f84E8FB](https://etherscan.io/address/0xD104F7479117209c1B885390500f29110f84E8FB)
+- ACoconutBTC: [0x3644B1464Cc0ADb73AcC936dc6C4d5dDE42D108b](https://etherscan.io/address/0x3644B1464Cc0ADb73AcC936dc6C4d5dDE42D108b)
+- ACoconutVault: [0xbDB15b5E88698c2DCfb6bFB7eb65fDEA36238055](https://etherscan.io/address/0xbDB15b5E88698c2DCfb6bFB7eb65fDEA36238055)
+- StrategyCurveRenBTC: [0x3c5900C18Ee4d054149f49238138c806488449d2](https://etherscan.io/address/0x3c5900C18Ee4d054149f49238138c806488449d2)
+- AccountFactory: [0x7583a7a3852f742bBC66855F3502f1c512a0aD6E](https://etherscan.io/address/0x7583a7a3852f742bBC66855F3502f1c512a0aD6E)
+- StakingApplication: [0x66386885C7fb8B81126c58C3F5Ea533fC472139e](https://etherscan.io/address/0x66386885C7fb8B81126c58C3F5Ea533fC472139e)
