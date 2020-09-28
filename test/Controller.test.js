@@ -2,6 +2,7 @@ const { BN, expectRevert, time } = require('@openzeppelin/test-helpers');
 const assert = require('assert');
 const Controller = artifacts.require("Controller");
 const MockToken = artifacts.require("MockToken");
+const RewardedVault = artifacts.require("RewardedVault");
 
 contract("Controller", async ([owner, user, user2, user3]) => {
     let token;
@@ -38,5 +39,15 @@ contract("Controller", async ([owner, user, user2, user3]) => {
         await controller.addVault(user2);
         assert.strictEqual((await controller.numVaults()).toNumber(), 1);
         assert.strictEqual(await controller.vaults(0), user2);
+    });
+    it("should add rewards to vaults", async () => {
+        const vaultToken = await MockToken.new("TEST", "TEST");
+        const vault = await RewardedVault.new("Mock Token Vault Token", "Mockv", controller.address, vaultToken.address);
+        await controller.addVault(vault.address);
+        assert.strictEqual((await token.balanceOf(vault.address)).toString(), '0');
+        assert.strictEqual((await token.balanceOf(owner)).toString(), '0');
+        await controller.addRewards(0, '150000000000000000000000');
+        assert.strictEqual((await token.balanceOf(vault.address)).toString(), '150000000000000000000000');
+        assert.strictEqual((await token.balanceOf(owner)).toString(), '60000000000000000000000');
     });
 });
