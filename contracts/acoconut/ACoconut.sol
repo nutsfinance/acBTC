@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Capped.sol";
  * https://github.com/yam-finance/yam-protocol/blob/master/contracts/token/YAMGovernanceStorage.sol
  * https://github.com/yam-finance/yam-protocol/blob/master/contracts/token/YAMGovernance.sol
  */
-contract ACoconut is ERC20, ERC20Capped {
+contract ACoconut is ERC20Capped {
     event MinterUpdated(address indexed account, bool allowed);
     
     address public governance;
@@ -48,13 +48,6 @@ contract ACoconut is ERC20, ERC20Capped {
 
     constructor() public ERC20("ACoconut", "AC") ERC20Capped(21000000 * 10 ** 18) {
         governance = msg.sender;
-    }
-
-    /**
-     * @dev See {ERC20Capped-_beforeTokenTransfer}.
-     */
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override(ERC20, ERC20Capped) {
-        ERC20Capped._beforeTokenTransfer(from, to, amount);
     }
 
     /**
