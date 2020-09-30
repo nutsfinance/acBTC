@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Capped.sol";
  * https://github.com/yam-finance/yam-protocol/blob/master/contracts/token/YAMGovernance.sol
  */
 contract ACoconut is ERC20, ERC20Capped {
+    event MinterUpdated(address indexed account, bool allowed);
     
     address public governance;
     mapping(address => bool) public minters;
@@ -72,6 +73,8 @@ contract ACoconut is ERC20, ERC20Capped {
     function setMinter(address _user, bool _allowed) public {
         require(msg.sender == governance, "not governance");
         minters[_user] = _allowed;
+
+        emit MinterUpdated(_user, _allowed);
     }
 
     /**

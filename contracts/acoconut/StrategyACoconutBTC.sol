@@ -21,7 +21,7 @@ contract StrategyACoconutBTC is IStrategy {
     address public governance;
     address public vault;
 
-    address reserveRecipient;
+    address public reserveRecipient;
     uint256 public reserveRate = 0;
     uint256 public constant reserveRateMax = 10000;
 

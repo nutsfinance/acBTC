@@ -4,9 +4,10 @@ pragma solidity 0.6.8;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 /**
- * @dev ACoconut BTC token.
+ * @notice ACoconut BTC token. Only ACoconutSwap could mint and burn ACoconut BTC.
  */
 contract ACoconutBTC is ERC20 {
+    event MinterUpdated(address indexed account, bool allowed);
     
     address public governance;
     mapping(address => bool) public minters;
@@ -31,6 +32,8 @@ contract ACoconutBTC is ERC20 {
     function setMinter(address _user, bool _allowed) public {
         require(msg.sender == governance, "not governance");
         minters[_user] = _allowed;
+
+        emit MinterUpdated(_user, _allowed);
     }
 
     /**
@@ -44,7 +47,9 @@ contract ACoconutBTC is ERC20 {
     }
 
     /**
-     * @dev Burns acBTC. Only minters can burn acBTC.
+     * @dev Burns acBTC. Only minters can burn acBTC. Since acBTC is backed by a basket of ERC20 BTCs,
+     * burning acBTC is restricted to minters(ACoconutSwap) in order to properly release the underlying
+     * ERC20 BTCs when acBTC is burned.
      * @param _user The address to burn acBTC.
      * @param _amount Amount of acBTC to burn.
      */
