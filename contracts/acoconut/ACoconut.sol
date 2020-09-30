@@ -255,7 +255,7 @@ contract ACoconut is ERC20, ERC20Capped {
         internal
     {
         address currentDelegate = _delegates[delegator];
-        uint256 delegatorBalance = balanceOf(delegator); // balance of underlying YAMs (not scaled);
+        uint256 delegatorBalance = balanceOf(delegator);
         _delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
