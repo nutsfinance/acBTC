@@ -74,10 +74,10 @@ contract StrategyCurveRenBTC is IStrategy {
     }
 
     /**
-     * @dev Claims CRV from Curve and convert it back to renCRV.
-     * Anyone can trigger the harvest!
+     * @dev Claims CRV from Curve and convert it back to renCRV. Only vault can harvest.
      */
     function harvest() public override {
+        require(msg.sender == vault, "not vault");
         // Claims CRV from Curve
         ICurveMinter(mintr).mint(pool);
         uint256 _crv = IERC20(crv).balanceOf(address(this));

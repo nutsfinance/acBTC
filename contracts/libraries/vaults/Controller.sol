@@ -4,7 +4,6 @@ pragma solidity 0.6.8;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../interfaces/IERC20Mintable.sol";
-import "../interfaces/IStrategy.sol";
 import "../interfaces/IController.sol";
 import "./RewardedVault.sol";
 
@@ -84,7 +83,8 @@ contract Controller is IController {
     }
 
     /**
-     * @dev Helpher function to earn in the vault.
+     * @dev Helpher function to earn in the vault. Anyone can call this method as
+     * earn() in vault is public!
      * @param _vaultId ID of the vault to earn.
      */
     function earn(uint256 _vaultId) public {
@@ -93,35 +93,12 @@ contract Controller is IController {
     }
 
     /**
-     * @dev Helper function to earn in all vaults.
+     * @dev Helper function to earn in all vaults. Anyone can call this method as
+     * earn() in vault is public!
      */
     function earnAll() public {
         for (uint256 i = 0; i < numVaults; i++) {
             RewardedVault(vaults[i]).earn();
-        }
-    }
-
-    /**
-     * @dev Helper function to harvest in the vault.
-     * @param _vaultId ID of the vault to harvest.
-     */
-    function harvest(uint256 _vaultId) public {
-        require(vaults[_vaultId] != address(0x0), "vault not exist");
-        address strategy = RewardedVault(vaults[_vaultId]).strategy();
-        if (strategy != address(0x0)) {
-            IStrategy(strategy).harvest();
-        }
-    }
-
-    /**
-     * @dev Helper function to harvest in all vaults.
-     */
-    function harvestAll() public {
-        for (uint256 i = 0; i < numVaults; i++) {
-            address strategy = RewardedVault(vaults[i]).strategy();
-            if (strategy != address(0x0)) {
-                IStrategy(strategy).harvest();
-            }
         }
     }
 }

@@ -83,9 +83,10 @@ contract StrategyACoconutBTC is IStrategy {
     }
     
     /**
-     * @dev Claims yield and convert it back to want token.
+     * @dev Claims yield and convert it back to want token. Only vault can harvest.
      */
     function harvest() public override {
+        require(msg.sender == vault, "not vault");
         uint256 feeAmount = ACoconutSwap(acSwap).collectFees();
         if (feeAmount > 0 && reserveRate > 0 && reserveRecipient != address(0x0)) {
             uint256 reserveAmount = feeAmount.mul(reserveRate).div(reserveRateMax);

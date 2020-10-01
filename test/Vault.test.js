@@ -8,9 +8,11 @@ contract("Vault", async ([owner, user, user2, user3]) => {
     let token;
     let vault;
     let strategy;
+    let anotherToken;
 
     beforeEach(async () => {
         token = await MockToken.new();
+        anotherToken = await MockToken.new();
         vault = await Vault.new("Mock Token Vault Token", "Mockv", token.address);
         strategy = await Strategy.new(token.address, vault.address);
     });
@@ -25,6 +27,12 @@ contract("Vault", async ([owner, user, user2, user3]) => {
         await expectRevert(vault.setStrategy(strategy.address, {from: user}), "not governance");
         await vault.setStrategy(strategy.address);
         assert.strictEqual(await vault.strategy(), strategy.address);
+    });
+    it("should set strategist", async () => {
+        assert.strictEqual(await vault.strategist(), owner);
+        await expectRevert(vault.setStrategist(user2, {from: user}), "not governance");
+        await vault.setStrategist(user);
+        assert.strictEqual(await vault.strategist(), user);
     });
     it("should be able to deposit and withdraw with no strategy", async () => {
         await token.mint(user, 100);
@@ -146,6 +154,17 @@ contract("Vault", async ([owner, user, user2, user3]) => {
         assert.strictEqual((await token.balanceOf(vault.address)).toNumber(), 0);
         assert.strictEqual((await token.balanceOf(strategy.address)).toNumber(), 0);
     });
+    it("should only allow governance or strategist to harvest", async () => {
+        await expectRevert(vault.harvest({from: user}), "not authorized");
+    });
+    it("should not allow to harvest if strategy is not set", async () => {
+        await expectRevert(vault.harvest({from: owner}), "no strategy");
+    });
+    it("should allow strategist to harvest", async () => {
+        await vault.setStrategy(strategy.address);
+        await vault.setStrategist(user);
+        await vault.harvest({from: user});
+    });
     it("should update share prices after harvest", async () => {
         await vault.setStrategy(strategy.address);
         await token.mint(user, 200);
@@ -154,7 +173,7 @@ contract("Vault", async ([owner, user, user2, user3]) => {
         // Deposit into strategy!
         await vault.earn();
         // Harvest from strategy!
-        await strategy.harvest();
+        await vault.harvest();
         assert.strictEqual((await vault.getPricePerFullShare()).toString(), '1200000000000000000');
 
         // Second user deposits 360 tokens
@@ -172,5 +191,16 @@ contract("Vault", async ([owner, user, user2, user3]) => {
         assert.strictEqual((await strategy.balanceOf()).toNumber(), 600);
         assert.strictEqual((await token.balanceOf(vault.address)).toNumber(), 0);
         assert.strictEqual((await token.balanceOf(strategy.address)).toNumber(), 600);
+    });
+    it("should only allow governance or strategist to salvage", async () => {
+        await expectRevert(vault.salvage(anotherToken.address, 100, {from: user}), "not authorized");
+    });
+    it("should allow strategist to salvage", async () => {
+        await anotherToken.mint(vault.address, 200);
+        assert.strictEqual((await anotherToken.balanceOf(owner)).toNumber(), 0);
+        await vault.setStrategist(user);
+        await vault.salvage(anotherToken.address, 150, {from: user});
+        assert.strictEqual((await anotherToken.balanceOf(owner)).toNumber(), 150);
+        assert.strictEqual((await anotherToken.balanceOf(vault.address)).toNumber(), 50);
     });
 });

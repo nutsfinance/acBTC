@@ -19,6 +19,7 @@ contract Vault is ERC20 {
 
     IERC20 public token;
     address public governance;
+    address public strategist;
     address public strategy;
 
     event Deposited(address indexed user, address indexed token, uint256 amount, uint256 shareAmount);
@@ -27,6 +28,7 @@ contract Vault is ERC20 {
     constructor(string memory _name, string memory _symbol, address _token) public ERC20(_name, _symbol) {
         token = IERC20(_token);
         governance = msg.sender;
+        strategist = msg.sender;
     }
 
     /**
@@ -43,6 +45,14 @@ contract Vault is ERC20 {
     function setGovernance(address _governance) public {
         require(msg.sender == governance, "not governance");
         governance = _governance;
+    }
+
+    /**
+     * @dev Upadtes the strategist address.
+     */
+    function setStrategist(address _strategist) public {
+        require(msg.sender == governance, "not governance");
+        strategist = _strategist;
     }
 
     /**
@@ -65,12 +75,24 @@ contract Vault is ERC20 {
 
     /**
      * @dev Starts earning and deposits all current balance into strategy.
+     * Anyone can call this function to start earning.
      */
     function earn() public {
+        if (strategy != address(0x0)) {
+            uint256 _bal = token.balanceOf(address(this));
+            token.safeTransfer(strategy, _bal);
+            IStrategy(strategy).deposit();
+        }
+    }
+
+    /**
+     * @dev Harvest yield from the strategy if set. Only strategist or governance can
+     * harvest from the strategy.
+     */
+    function harvest() public {
+        require(msg.sender == strategist || msg.sender == governance, "not authorized");
         require(strategy != address(0x0), "no strategy");
-        uint256 _bal = token.balanceOf(address(this));
-        token.safeTransfer(strategy, _bal);
-        IStrategy(strategy).deposit();
+        IStrategy(strategy).harvest();
     }
 
     /**
@@ -140,7 +162,7 @@ contract Vault is ERC20 {
      * @param _amount Amount of token to salvage.
      */
     function salvage(address _tokenAddress, uint256 _amount) public {
-        require(msg.sender == governance, "not governance");
+        require(msg.sender == strategist || msg.sender == governance, "not authorized");
         require(_tokenAddress != address(token), "cannot salvage");
         require(_amount > 0, "zero amount");
         IERC20(_tokenAddress).safeTransfer(governance, _amount);
