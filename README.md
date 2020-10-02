@@ -1,9 +1,13 @@
 # ACoconut BTC(acBTC)
 
+Welcome to ACoconut BTC/acBTC! ACoconut BTC is a synthetic ERC20 BTC token backed by a basket of ERC20 BTC tokens. It’s built on top of Curve’s StableSwap algorithm and it's integrated with saving and swap applications. For more information about acBTC, please check our [docs](https://docs.acbtc.fi/) or visit our [DApp](https://app.acbtc.fi/).
+
+## Audits
+All smart contracts, except [**ACoconutExchange**](./contracts/acoconut/ACoconutExchange.sol) and [**CurveRenCrvMigrator**](./contracts/acoconut/CurveRenCrvMigrator.sol), have been reviewed thoroughly by [Secbit Labs](https://secbit.io/). The complete audit report will be online soon.
+
+For these two smart contracts, their audit will complete within 7 days and they will go live shortly after. Since the Big Blind Pool lasts for 14 days, and these two contracts are not needed until migration, our users have substantial time to review the final contracts as well as their audit reports before the migration happens.
+
 ## Contracts
-**Account**
-- [**Account**](./contracts/account/Account.sol): User-owned smart contract accounts.
-- [**AccountFactory**](./contracts/account/AccountFactory.sol): Factory to create new smart contract account.
 
 **ACoconut**
 - [**ACoconut**](./contracts/acoconut/ACoconut.sol): ACoconut goverance token.
@@ -16,16 +20,19 @@
 **Application**
 - [**StakingApplication**](./contracts/applications/StakingApplication.sol): Application that helps staking and claiming rewards.
 
+**Account**
+- [**Account**](./contracts/account/Account.sol): User-owned smart contract accounts.
+- [**AccountFactory**](./contracts/account/AccountFactory.sol): Factory to create new smart contract account.
+
 **Libraries**
-- **Curve**: Curve.fi's interfaces
-- **Uniswap**: Uniswap's interfaces
 - **Vault**
   - [**Controller**](./contracts/libraries/vaults/Controller.sol): Controls reward distributions to rewarded vaults.
   - [**Vault**](./contracts/libraries/vaults/Vault.sol): YEarn's style vault that collect assets to earn yield.
   - [**RewardedVault**](./contracts/libraries/vaults/RewardedVault.sol): A vault that can distribute rewards for a seperate reward token.
   - [**StrategyCurveRenBTC**](./contracts/libraries/vaults/StrategyCurveRenBTC.sol): An earning strategy for Curve.fi's renCrv vault.
   
-## Beta Environment
+## Deployments
+### Beta Environment
 - ACoconut: [0xD104F7479117209c1B885390500f29110f84E8FB](https://etherscan.io/address/0xD104F7479117209c1B885390500f29110f84E8FB)
 - ACoconutBTC: [0x3644B1464Cc0ADb73AcC936dc6C4d5dDE42D108b](https://etherscan.io/address/0x3644B1464Cc0ADb73AcC936dc6C4d5dDE42D108b)
 - Controller: [0x9003b72161870A49F2e12C9cC161527aea9133d7](https://etherscan.io/address/0x9003b72161870A49F2e12C9cC161527aea9133d7)
@@ -34,7 +41,7 @@
 - AccountFactory: [0x7583a7a3852f742bBC66855F3502f1c512a0aD6E](https://etherscan.io/address/0x7583a7a3852f742bBC66855F3502f1c512a0aD6E)
 - StakingApplication: [0x66386885C7fb8B81126c58C3F5Ea533fC472139e](https://etherscan.io/address/0x66386885C7fb8B81126c58C3F5Ea533fC472139e)
 
-## Prod Environment
+### Prod Environment
 - ACoconut: [0x9A0aBA393aac4dFbFf4333B06c407458002C6183](https://etherscan.io/address/0x9A0aBA393aac4dFbFf4333B06c407458002C6183)
 - ACoconutBTC: [0xAcf806FeAeD6455244D34590AE57F772e80AA1a8](https://etherscan.io/address/0xAcf806FeAeD6455244D34590AE57F772e80AA1a8)
 - Controller: [0xFA25316494560fbEc71F147aDCD6BE34C7aB7AE5](https://etherscan.io/address/0xFA25316494560fbEc71F147aDCD6BE34C7aB7AE5)
