@@ -4,6 +4,7 @@ Welcome to ACoconut BTC/acBTC! ACoconut BTC is a synthetic ERC20 BTC token backe
 
 ## Audits
 All smart contracts, except [**ACoconutExchange**](./contracts/acoconut/ACoconutExchange.sol) and [**CurveRenCrvMigrator**](./contracts/acoconut/CurveRenCrvMigrator.sol), have been reviewed throughoutly by [Secbit Labs](https://secbit.io/). The complete audit report will be available soon.
+
 For these two smart contracts, their audit will complete within 7 days and they will go live shortly after. Since the Big Blind Pool lasts for 14 days, and these two contracts are not needed until the migration, our users have substantial time to review the final contracts as well as the audit reports before the migration happens.
 
 ## Contracts
