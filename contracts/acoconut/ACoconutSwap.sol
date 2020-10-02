@@ -66,11 +66,13 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
 
         governance = msg.sender;
         tokens = _tokens;
-        poolToken = _poolToken;
-        feeRecipient = _feeRecipient;
+        precisions = _precisions;
         mintFee = _fees[0];
         swapFee = _fees[1];
         redeemFee = _fees[2];
+        poolToken = _poolToken;
+        feeRecipient = _feeRecipient;
+
         initialA = _A;
 
         // The swap must start with paused state!
@@ -102,10 +104,12 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         uint256 Ann = _A * _balances.length;
         for (i = 0; i < 255; i++) {
             uint256 pD = D;
-            for (i = 0; i < _balances.length; i++) {
-                pD = pD.mul(D).div(_balances[i].mul(_balances.length));
+            for (uint256 j = 0; j < _balances.length; j++) {
+                // pD = pD * D / (_x * balance.length)
+                pD = pD.mul(D).div(_balances[j].mul(_balances.length));
             }
             prevD = D;
+            // D = (Ann * sum + pD * balance.length) * D / ((Ann - 1) * D + (balance.length + 1) * pD)
             D = Ann.mul(sum).add(pD.mul(_balances.length)).mul(D).div(Ann.sub(1).mul(D).add(_balances.length.add(1).mul(pD)));
             if (D > prevD) {
                 if (D - prevD <= 1) break;
@@ -292,6 +296,8 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             dy = dy.sub(dy.mul(fee).div(feeDenominator));
         }
         require(dy >= _minDy, "fewer than expected");
+
+        IERC20(tokens[_i]).safeTransferFrom(msg.sender, address(this), _dx);
         // Important: When swap fee > 0, the swap fee is charged on the output token.
         // Therefore, balances[j] < tokens[j].balanceOf(this)
         // Since balances[j] is used to compute D, D is unchanged.
@@ -506,7 +512,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @dev Collect fee based on the token balance difference.
      */
     function collectFees() external returns (uint256) {
-        require(msg.sender == feeRecipient, "not fee recipient");
+        require(admins[msg.sender], "not admin");
         uint256[] memory _balances = balances;
         uint256 A = getA();
         uint256 oldD = _getD(_balances, A);
