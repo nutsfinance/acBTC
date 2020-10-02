@@ -43,15 +43,15 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
     address public feeRecipient;
     address public poolToken;
 
-    uint256 public initialA;
-    uint256 public futureA;
-    uint256 public initialATimestamp;
-    uint256 public futureATimestamp;
-
     address public governance;
     mapping(address => bool) public admins;
     bool public paused;
 
+    uint256 public initialA;
+
+    /**
+     * @dev Initialize the ACoconut Swap.
+     */
     function initialize(address[] memory _tokens, uint256[] memory _precisions, uint256[] memory _fees,
         address _poolToken, address _feeRecipient, uint256 _A) public initializer {
         require(_tokens.length == _precisions.length, "input mismatch");
@@ -68,37 +68,20 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         tokens = _tokens;
         poolToken = _poolToken;
         feeRecipient = _feeRecipient;
-        initialA = _A;
-        futureA = _A;
         mintFee = _fees[0];
         swapFee = _fees[1];
         redeemFee = _fees[2];
+        initialA = _A;
 
         // The swap must start with paused state!
         paused = true;
     }
 
     /**
-     * @dev Handles ramping up or down of A
+     * @dev Returns the current value of A. This method might be updated in the future.
      */
     function getA() public view returns (uint256) {
-        uint256 t1 = futureATimestamp;
-        uint256 a1 = futureA;
-
-        if (block.timestamp < t1) {
-            uint256 t0 = initialATimestamp;
-            uint256 a0 = initialA;
-
-            if (a1 > a0) {
-                // a0 + (a1 - a0) * (block.timestamp - t0) / (t1 - t0)
-                return a0.add(a1.sub(a0).mul(block.timestamp.sub(t0)).div(t1.sub(t0)));
-            } else {
-                // a0 - (a0 - a1) * (block.timestamp - t0) / (t1 - t0)
-                return a0.sub(a0.sub(a1).mul(block.timestamp.sub(t0)).div(t1.sub(t0)));
-            }
-        } else {
-            return a1;
-        }
+        return initialA;
     }
 
     /**
@@ -592,31 +575,6 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(msg.sender == governance, "not governance");
         require(_poolToken != address(0x0), "pool token not set");
         poolToken = _poolToken;
-    }
-
-    /**
-     * @dev Updates the amplicification coefficient.
-     */
-    function rampA(uint256 _futureA, uint256 _futureATimestamp) external {
-        require(msg.sender == governance, "not governance");
-        require(_futureATimestamp > block.timestamp, "too early");
-
-        initialA = getA();
-        futureA = _futureA;
-        initialATimestamp = block.timestamp;
-        futureATimestamp = _futureATimestamp;
-    }
-
-    /**
-     * @dev Stops the ramping process.
-     */
-    function stopRampA() external {
-        require(msg.sender == governance, "not governance");
-        uint256 A = getA();
-        initialA = A;
-        futureA = A;
-        initialATimestamp = block.timestamp;
-        futureATimestamp = block.timestamp;
     }
 
     /**
