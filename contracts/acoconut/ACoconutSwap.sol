@@ -205,9 +205,10 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         uint256 oldD = _getD(_balances, A);
         uint256 i = 0;
         for (i = 0; i < _balances.length; i++) {
-            if (oldD == 0) {
-                // Initial deposit rquires all tokens provided!
-                require(_amounts[i] > 0, "zero amount");
+            if (_amounts[i] == 0) {
+                // Initial deposit requires all tokens provided!
+                require(oldD > 0, "zero amount");
+                continue;
             }
             _balances[i] = _balances[i].add(_amounts[i].mul(precisions[i]));
         }
@@ -328,7 +329,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         for (uint256 i = 0; i < _balances.length; i++) {
             // We might choose to use poolToken.totalSupply to compute the amount, but decide to use
             // D in case we have multiple minters on the pool token.
-            amounts[i] = _balances[i].mul(_amount).div(D);
+            amounts[i] = _balances[i].mul(_amount).div(D).div(precisions[i]);
         }
 
         return amounts;
@@ -371,6 +372,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             IERC20(tokens[i]).safeTransfer(msg.sender, amounts[i]);
         }
 
+        // After reducing the redeem fee, the remaining pool tokens are burned!
         IERC20MintableBurnable(poolToken).burn(msg.sender, _amount);
 
         emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
@@ -393,6 +395,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             // Redemption fee is charged with pool token before redemption.
             _amount = _amount.sub(_amount.mul(redeemFee).div(feeDenominator));
         }
+        // The pool token amount becomes D - _amount
         uint256 y = _getY(_balances, _i, D.sub(_amount), A);
 
         return _balances[_i].sub(y).div(precisions[_i]);
@@ -423,7 +426,9 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             _amount = _amount.sub(feeAmount);
         }
 
+        // y is converted(18 decimals)
         uint256 y = _getY(_balances, _i, D.sub(_amount), A);
+        // dy is not converted
         uint256 dy = _balances[_i].sub(y).div(precisions[_i]);
         require(dy >= _minRedeemAmount, "fewer than expected");
         // Updates token balance in storage
@@ -518,7 +523,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         uint256 oldD = _getD(_balances, A);
 
         for (uint256 i = 0; i < _balances.length; i++) {
-            _balances[i] = IERC20(tokens[i]).balanceOf(address(this));
+            _balances[i] = IERC20(tokens[i]).balanceOf(address(this)).mul(precisions[i]);
         }
         uint256 newD = _getD(_balances, A);
         uint256 feeAmount = newD.sub(oldD);
