@@ -87,7 +87,7 @@ contract StrategyACoconutBTC is IStrategy {
      */
     function harvest() public override {
         require(msg.sender == vault, "not vault");
-        uint256 feeAmount = ACoconutSwap(acSwap).collectFees();
+        uint256 feeAmount = ACoconutSwap(acSwap).collectFee();
         if (feeAmount > 0 && reserveRate > 0 && reserveRecipient != address(0x0)) {
             uint256 reserveAmount = feeAmount.mul(reserveRate).div(reserveRateMax);
             IERC20(want).safeTransfer(reserveRecipient, reserveAmount);

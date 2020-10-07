@@ -167,7 +167,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @param _amounts Unconverted token balances.
      * @return The amount of pool token minted.
      */
-    function getMintAmount(uint256[] calldata _amounts) external view returns (uint256) {
+    function getMintAmount(uint256[] calldata _amounts) external view returns (uint256, uint256) {
         uint256[] memory _balances = balances;
         require(_amounts.length == _balances.length, "invalid amount");
         
@@ -182,12 +182,14 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         uint256 newD = _getD(_balances, A);
         // newD should be bigger than or equal to oldD
         uint256 mintAmount = newD.sub(oldD);
+        uint256 feeAmount = 0;
 
         if (mintFee > 0) {
-            mintAmount = mintAmount.sub(mintAmount.mul(mintFee).div(feeDenominator));
+            feeAmount = mintAmount.mul(mintFee).div(feeDenominator);
+            mintAmount = mintAmount.sub(feeAmount);
         }
 
-        return mintAmount;
+        return (mintAmount, feeAmount);
     }
 
     /**
@@ -291,6 +293,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         uint256 dy = _balances[_j].sub(y).sub(1).div(precisions[_j]);
         // Update token balance in storage
         balances[_j] = y;
+        balances[_i] = _balances[_i];
 
         uint256 fee = swapFee;
         if (fee > 0) {
@@ -314,16 +317,18 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @param _amount Amount of pool tokens to redeem.
      * @return Amounts of underlying tokens redeemed.
      */
-    function getRedeemAmount(uint256 _amount) external view returns (uint256[] memory) {
+    function getRedeemProportionAmount(uint256 _amount) external view returns (uint256[] memory, uint256) {
         uint256[] memory _balances = balances;
         require(_amount > 0, "zero amount");
 
         uint256 A = getA();
         uint256 D = _getD(_balances, A);
         uint256[] memory amounts = new uint256[](_balances.length);
+        uint256 feeAmount = 0;
         if (redeemFee > 0) {
+            feeAmount = _amount.mul(redeemFee).div(feeDenominator);
             // Redemption fee is charged with pool token before redemption.
-            _amount = _amount.sub(_amount.mul(redeemFee).div(feeDenominator));
+            _amount = _amount.sub(feeAmount);
         }
 
         for (uint256 i = 0; i < _balances.length; i++) {
@@ -332,7 +337,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             amounts[i] = _balances[i].mul(_amount).div(D).div(precisions[i]);
         }
 
-        return amounts;
+        return (amounts, feeAmount);
     }
 
     /**
@@ -340,7 +345,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @param _amount Amount of pool token to redeem.
      * @param _minRedeemAmounts Minimum amount of underlying tokens to get.
      */
-    function redeem(uint256 _amount, uint256[] calldata _minRedeemAmounts) external nonReentrant {
+    function redeemProportion(uint256 _amount, uint256[] calldata _minRedeemAmounts) external nonReentrant {
         uint256[] memory _balances = balances;
         // If swap is paused, only admins can redeem.
         require(!paused || admins[msg.sender], "paused");
@@ -384,21 +389,24 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @param _i Index of the underlying token to redeem to.
      * @return Amount of underlying token that can be redeem to.
      */
-    function getRedeemAmount(uint256 _amount, uint256 _i) external view returns (uint256) {
+    function getRedeemSingleAmount(uint256 _amount, uint256 _i) external view returns (uint256, uint256) {
         uint256[] memory _balances = balances;
         require(_amount > 0, "zero amount");
         require(_i < _balances.length, "invalid token");
 
         uint256 A = getA();
         uint256 D = _getD(_balances, A);
+        uint256 feeAmount = 0;
         if (redeemFee > 0) {
+            feeAmount = _amount.mul(redeemFee).div(feeDenominator);
             // Redemption fee is charged with pool token before redemption.
-            _amount = _amount.sub(_amount.mul(redeemFee).div(feeDenominator));
+            _amount = _amount.sub(feeAmount);
         }
         // The pool token amount becomes D - _amount
         uint256 y = _getY(_balances, _i, D.sub(_amount), A);
+        uint256 dy = _balances[_i].sub(y).div(precisions[_i]);
 
-        return _balances[_i].sub(y).div(precisions[_i]);
+        return (dy, feeAmount);
     }
 
     /**
@@ -407,7 +415,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @param _i Index of the token to redeem to.
      * @param _minRedeemAmount Minimum amount of the underlying token to redeem to.
      */
-    function redeem(uint256 _amount, uint256 _i, uint256 _minRedeemAmount) external nonReentrant {
+    function redeemSingle(uint256 _amount, uint256 _i, uint256 _minRedeemAmount) external nonReentrant {
         uint256[] memory _balances = balances;
         // If swap is paused, only admins can redeem.
         require(!paused || admins[msg.sender], "paused");
@@ -437,7 +445,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         amounts[_i] = dy;
 
         IERC20(tokens[_i]).safeTransfer(msg.sender, dy);
-        IERC20MintableBurnable(poolToken).burn(msg.sender, _amount.add(feeAmount));
+        IERC20MintableBurnable(poolToken).burn(msg.sender, _amount);
 
         emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
     }
@@ -447,7 +455,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @param _amounts Unconverted token balances.
      * @return The amount of pool token that needs to be redeemed.
      */
-    function getRedeemTokensAmount(uint256[] calldata _amounts) external view returns (uint256) {
+    function getRedeemMultiAmount(uint256[] calldata _amounts) external view returns (uint256, uint256) {
         uint256[] memory _balances = balances;
         require(_amounts.length == balances.length, "length not match");
         
@@ -462,11 +470,13 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
 
         // newD should be smaller than or equal to oldD
         uint256 redeemAmount = oldD.sub(newD);
+        uint256 feeAmount = 0;
         if (redeemFee > 0) {
             redeemAmount = redeemAmount.mul(feeDenominator).div(feeDenominator.sub(redeemFee));
+            feeAmount = redeemAmount.sub(oldD.sub(newD));
         }
 
-        return redeemAmount;
+        return (redeemAmount, feeAmount);
     }
 
     /**
@@ -474,7 +484,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @param _amounts Amounts of underlying tokens to redeem to.
      * @param _maxRedeemAmount Maximum of pool token to redeem.
      */
-    function redeemTokens(uint256[] calldata _amounts, uint256 _maxRedeemAmount) external nonReentrant {
+    function redeemMulti(uint256[] calldata _amounts, uint256 _maxRedeemAmount) external nonReentrant {
         uint256[] memory _balances = balances;
         require(_amounts.length == balances.length, "length not match");
         // If swap is paused, only admins can redeem.
@@ -504,7 +514,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
 
         // Updates token balances in storage.
         balances = _balances;
-        IERC20MintableBurnable(poolToken).burn(msg.sender, redeemAmount);
+        IERC20MintableBurnable(poolToken).burn(msg.sender, redeemAmount.sub(feeAmount));
         for (i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0)   continue;
             IERC20(tokens[i]).safeTransfer(msg.sender, _amounts[i]);
@@ -514,9 +524,25 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
     }
 
     /**
+     * @dev Return the amount of fee that's not collected.
+     */
+    function getPendingFeeAmount() external view returns (uint256) {
+        uint256[] memory _balances = balances;
+        uint256 A = getA();
+        uint256 oldD = _getD(_balances, A);
+
+        for (uint256 i = 0; i < _balances.length; i++) {
+            _balances[i] = IERC20(tokens[i]).balanceOf(address(this)).mul(precisions[i]);
+        }
+        uint256 newD = _getD(_balances, A);
+
+        return newD.sub(oldD);
+    }
+
+    /**
      * @dev Collect fee based on the token balance difference.
      */
-    function collectFees() external returns (uint256) {
+    function collectFee() external returns (uint256) {
         require(admins[msg.sender], "not admin");
         uint256[] memory _balances = balances;
         uint256 A = getA();

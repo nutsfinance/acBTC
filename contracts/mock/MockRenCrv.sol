@@ -8,6 +8,6 @@ import "./MockToken.sol";
  */
 contract MockRenCrv is MockToken {
 
-    constructor() MockToken("Mock Ren CRV", "MockRenCrv") public {}
+    constructor() MockToken("Mock Ren CRV", "MockRenCrv", 18) public {}
 
 }

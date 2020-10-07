@@ -8,5 +8,5 @@ import "./MockToken.sol";
  */
 contract MockRenBTC is MockToken {
 
-    constructor() MockToken("Mock Ren BTC", "MockRenBTC") public {}
+    constructor() MockToken("Mock Ren BTC", "MockRenBTC", 8) public {}
 }
