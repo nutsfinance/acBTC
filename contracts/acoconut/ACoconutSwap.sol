@@ -42,6 +42,8 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
     uint256 public redeemFee; // Redeem fee * 10**10
     address public feeRecipient;
     address public poolToken;
+    uint256 public totalSupply; // The total amount of pool token minted by the swap.
+                                // It might be different from the pool token supply as the pool token can have multiple minters.
 
     address public governance;
     mapping(address => bool) public admins;
@@ -172,7 +174,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(_amounts.length == _balances.length, "invalid amount");
         
         uint256 A = getA();
-        uint256 oldD = _getD(_balances, A);
+        uint256 oldD = totalSupply;
         uint256 i = 0;
         for (i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0)   continue;
@@ -204,7 +206,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(_balances.length == _amounts.length, "invalid amounts");
 
         uint256 A = getA();
-        uint256 oldD = _getD(_balances, A);
+        uint256 oldD = totalSupply;
         uint256 i = 0;
         for (i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0) {
@@ -233,6 +235,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             balances[i] = _balances[i];
             IERC20(tokens[i]).safeTransferFrom(msg.sender, address(this), _amounts[i]);
         }
+        totalSupply = newD;
         IERC20MintableBurnable(poolToken).mint(feeRecipient, feeAmount);
         IERC20MintableBurnable(poolToken).mint(msg.sender, mintAmount);
 
@@ -254,7 +257,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(_dx > 0, "invalid amount");
 
         uint256 A = getA();
-        uint256 D = _getD(_balances, A);
+        uint256 D = totalSupply;
         // balance[i] = balance[i] + dx * precisions[i]
         _balances[_i] = _balances[_i].add(_dx.mul(precisions[_i]));
         uint256 y = _getY(_balances, _j, D, A);
@@ -285,7 +288,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(_dx > 0, "invalid amount");
 
         uint256 A = getA();
-        uint256 D = _getD(_balances, A);
+        uint256 D = totalSupply;
         // balance[i] = balance[i] + dx * precisions[i]
         _balances[_i] = _balances[_i].add(_dx.mul(precisions[_i]));
         uint256 y = _getY(_balances, _j, D, A);
@@ -321,8 +324,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         uint256[] memory _balances = balances;
         require(_amount > 0, "zero amount");
 
-        uint256 A = getA();
-        uint256 D = _getD(_balances, A);
+        uint256 D = totalSupply;
         uint256[] memory amounts = new uint256[](_balances.length);
         uint256 feeAmount = 0;
         if (redeemFee > 0) {
@@ -352,8 +354,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(_amount > 0, "zero amount");
         require(_balances.length == _minRedeemAmounts.length, "invalid mins");
 
-        uint256 A = getA();
-        uint256 D = _getD(_balances, A);
+        uint256 D = totalSupply;
         uint256[] memory amounts = new uint256[](_balances.length);
         uint256 fee = redeemFee;
         uint256 feeAmount;
@@ -377,6 +378,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             IERC20(tokens[i]).safeTransfer(msg.sender, amounts[i]);
         }
 
+        totalSupply = D.sub(_amount);
         // After reducing the redeem fee, the remaining pool tokens are burned!
         IERC20MintableBurnable(poolToken).burn(msg.sender, _amount);
 
@@ -395,7 +397,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(_i < _balances.length, "invalid token");
 
         uint256 A = getA();
-        uint256 D = _getD(_balances, A);
+        uint256 D = totalSupply;
         uint256 feeAmount = 0;
         if (redeemFee > 0) {
             feeAmount = _amount.mul(redeemFee).div(feeDenominator);
@@ -423,7 +425,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(_i < _balances.length, "invalid token");
 
         uint256 A = getA();
-        uint256 D = _getD(_balances, A);
+        uint256 D = totalSupply;
         uint256 fee = redeemFee;
         uint256 feeAmount = 0;
         if (fee > 0) {
@@ -443,8 +445,9 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         balances[_i] = y;
         uint256[] memory amounts = new uint256[](_balances.length);
         amounts[_i] = dy;
-
         IERC20(tokens[_i]).safeTransfer(msg.sender, dy);
+
+        totalSupply = D.sub(_amount);
         IERC20MintableBurnable(poolToken).burn(msg.sender, _amount);
 
         emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
@@ -460,7 +463,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(_amounts.length == balances.length, "length not match");
         
         uint256 A = getA();
-        uint256 oldD = _getD(_balances, A);
+        uint256 oldD = totalSupply;
         for (uint256 i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0)   continue;
             // balance = balance + amount * precision
@@ -491,7 +494,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(!paused || admins[msg.sender], "paused");
         
         uint256 A = getA();
-        uint256 oldD = _getD(_balances, A);
+        uint256 oldD = totalSupply;
         uint256 i = 0;
         for (i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0)   continue;
@@ -514,7 +517,9 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
 
         // Updates token balances in storage.
         balances = _balances;
-        IERC20MintableBurnable(poolToken).burn(msg.sender, redeemAmount.sub(feeAmount));
+        uint256 burnAmount = redeemAmount.sub(feeAmount);
+        totalSupply = oldD.sub(burnAmount);
+        IERC20MintableBurnable(poolToken).burn(msg.sender, burnAmount);
         for (i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0)   continue;
             IERC20(tokens[i]).safeTransfer(msg.sender, _amounts[i]);
@@ -529,7 +534,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
     function getPendingFeeAmount() external view returns (uint256) {
         uint256[] memory _balances = balances;
         uint256 A = getA();
-        uint256 oldD = _getD(_balances, A);
+        uint256 oldD = totalSupply;
 
         for (uint256 i = 0; i < _balances.length; i++) {
             _balances[i] = IERC20(tokens[i]).balanceOf(address(this)).mul(precisions[i]);
@@ -546,7 +551,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         require(admins[msg.sender], "not admin");
         uint256[] memory _balances = balances;
         uint256 A = getA();
-        uint256 oldD = _getD(_balances, A);
+        uint256 oldD = totalSupply;
 
         for (uint256 i = 0; i < _balances.length; i++) {
             _balances[i] = IERC20(tokens[i]).balanceOf(address(this)).mul(precisions[i]);
@@ -556,6 +561,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         if (feeAmount == 0) return 0;
 
         balances = _balances;
+        totalSupply = newD;
         address _feeRecipient = feeRecipient;
         IERC20MintableBurnable(poolToken).mint(_feeRecipient, feeAmount);
 

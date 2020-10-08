@@ -105,6 +105,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await acbtc.balanceOf(feeRecipient)).toString(), '0');
         assert.strictEqual((await swap.balances(0)).toString(), '0');
         assert.strictEqual((await swap.balances(1)).toString(), '0');
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
 
         await swap.mint(['10000000000', '10000000000'], 0, {from: user});
         assert.strictEqual((await wbtc.balanceOf(user)).toString(), '0');
@@ -113,6 +114,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await acbtc.balanceOf(feeRecipient)).toString(), feeAmount.toString());
         assert.strictEqual((await swap.balances(0)).toString(), toWei('100'));
         assert.strictEqual((await swap.balances(1)).toString(), toWei('100'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
     });
     it("should mint the correct amount when two tokens are not equal", async () => {
         await swap.unpause();
@@ -130,6 +132,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await renbtc.balanceOf(user)).toString(), '9000000000');
         assert.strictEqual((await acbtc.balanceOf(user)).toString(), '0');
         assert.strictEqual((await acbtc.balanceOf(feeRecipient)).toString(), '0');
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
 
         await swap.mint(['11000000000', '9000000000'], 0, {from: user});
         assert.strictEqual((await wbtc.balanceOf(user)).toString(), '0');
@@ -138,6 +141,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await acbtc.balanceOf(feeRecipient)).toString(), feeAmount.toString());
         assert.strictEqual((await swap.balances(0)).toString(), toWei('110'));
         assert.strictEqual((await swap.balances(1)).toString(), toWei('90'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
     });
     it('should return the correct mint amount with initial balance when two tokens are equal', async () => {
         await swap.unpause();
@@ -215,6 +219,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await renbtc.balanceOf(swap.address)).toString(), '8500000000');
         assert.strictEqual((await swap.balances(0)).toString(), toWei('105'));
         assert.strictEqual((await swap.balances(1)).toString(), toWei('85'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
 
         // Swap 8 renBTC to wBTC
         await swap.swap(1, 0, '800000000', 0, {from: user2});
@@ -230,6 +235,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assertAlmostTheSame(await swap.balances(0), new BN(toWei('105')).sub(new BN(exchangeTotal).mul(new BN(PRECISION))));
         // 85 renBTC + 8 renBTC (in converted format)
         assert.strictEqual((await swap.balances(1)).toString(), toWei('93'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
     });
     it("should return the correct redeem amount with proportional redemption", async () => {
         await swap.unpause();
@@ -279,11 +285,13 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await renbtc.balanceOf(swap.address)).toString(), '8500000000');
         assert.strictEqual((await swap.balances(0)).toString(), toWei('105'));
         assert.strictEqual((await swap.balances(1)).toString(), toWei('85'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
 
         const feeBefore = await acbtc.balanceOf(feeRecipient);
         // Swap 8 renBTC to wBTC
         await acbtc.approve(swap.address, toWei('25'), {from: user2});
-        await swap.redeemProportion(toWei('25'), [0, 0], {from: user2});
+        const tx = await swap.redeemProportion(toWei('25'), [0, 0], {from: user2});
+        console.log('Redeem proportion: ' + tx.receipt.gasUsed);
 
         // The amount of WBTC got. In original format.
         assert.strictEqual((await wbtc.balanceOf(user2)).toString(), wbtcAmount.toString());
@@ -294,6 +302,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await renbtc.balanceOf(swap.address)).toString(), new BN('8500000000').sub(renbtcAmount).toString());
         assertAlmostTheSame(await swap.balances(0), new BN(toWei('105')).sub(wbtcAmount.mul(new BN(PRECISION))));
         assertAlmostTheSame(await swap.balances(1), new BN(toWei('85')).sub(renbtcAmount.mul(new BN(PRECISION))));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
     });
     it("should return the correct redeem amount to a single token", async () => {
         await swap.unpause();
@@ -338,10 +347,12 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await renbtc.balanceOf(swap.address)).toString(), '8500000000');
         assert.strictEqual((await swap.balances(0)).toString(), toWei('105'));
         assert.strictEqual((await swap.balances(1)).toString(), toWei('85'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
 
         const feeBefore = await acbtc.balanceOf(feeRecipient);
         await acbtc.approve(swap.address, redeemAmount, {from: user2});
-        await swap.redeemSingle(redeemAmount, 0, 0, {from: user2});
+        const tx = await swap.redeemSingle(redeemAmount, 0, 0, {from: user2});
+        console.log('Redeem single: ' + tx.receipt.gasUsed);
 
         // The amount of WBTC got. In original format.
         assert.strictEqual((await wbtc.balanceOf(user2)).toString(), wbtcAmount.toString());
@@ -352,6 +363,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await renbtc.balanceOf(swap.address)).toString(), new BN('8500000000').toString());
         assertAlmostTheSame(await swap.balances(0), new BN(toWei('105')).sub(wbtcAmount.mul(new BN(PRECISION))));
         assert.strictEqual((await swap.balances(1)).toString(), toWei('85'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
     });
     it("should return the correct redeem amount to multiple tokens", async () => {
         await swap.unpause();
@@ -395,10 +407,12 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await renbtc.balanceOf(swap.address)).toString(), '8500000000');
         assert.strictEqual((await swap.balances(0)).toString(), toWei('105'));
         assert.strictEqual((await swap.balances(1)).toString(), toWei('85'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
 
         const feeBefore = await acbtc.balanceOf(feeRecipient);
         await acbtc.approve(swap.address, redeemAmount, {from: user2});
-        await swap.redeemMulti(['1000000000', '500000000'], redeemAmount, {from: user2});
+        const tx = await swap.redeemMulti(['1000000000', '500000000'], redeemAmount, {from: user2});
+        console.log('Redeem multi: ' + tx.receipt.gasUsed);
 
         // The amount of WBTC got. In original format.
         assert.strictEqual((await wbtc.balanceOf(user2)).toString(), '1000000000');
@@ -409,6 +423,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         assert.strictEqual((await renbtc.balanceOf(swap.address)).toString(), '8000000000');
         assert.strictEqual((await swap.balances(0)).toString(), toWei('95'));
         assert.strictEqual((await swap.balances(1)).toString(), toWei('80'));
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
     });
     it("should collect the correct amount of fee", async () => {
         await swap.unpause();
@@ -418,14 +433,17 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         await renbtc.approve(swap.address, '8500000000', {from: user});
         await swap.mint(['10500000000', '8500000000'], 0, {from: user});
         
-        await renbtc.mint(user2, '800000000');
+        const tx = await renbtc.mint(user2, '800000000');
+        console.log('Mint: ' + tx.receipt.gasUsed);
         await renbtc.approve(swap.address, '800000000', {from: user2});
         
         const feeBefore = await acbtc.balanceOf(feeRecipient);
 
         // Swap 8 renBTC to wBTC
-        await swap.swap(1, 0, '800000000', 0, {from: user2});
+        const tx2 = await swap.swap(1, 0, '800000000', 0, {from: user2});
+        console.log('Swap: ' + tx2.receipt.gasUsed);
 
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
         const fee = await swap.getPendingFeeAmount();
         assert.notStrictEqual(fee.toString(), '0');
         await expectRevert(swap.collectFee(), "not admin");
@@ -434,6 +452,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         await swap.collectFee();
         assert.strictEqual((await swap.getPendingFeeAmount()).toString(), '0');
         assert.strictEqual((await feeBefore.add(fee)).toString(), (await acbtc.balanceOf(feeRecipient)).toString());
+        assert.strictEqual((await swap.totalSupply()).toString(), (await acbtc.totalSupply()).toString());
     });
     it("should allow to update governance", async () => {
         await expectRevert(swap.setGovernance(user, {from: admin}), "not governance");
