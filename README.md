@@ -45,7 +45,9 @@ For these two smart contracts, their audit will complete within 7 days and they 
 - ACoconut: [0x9A0aBA393aac4dFbFf4333B06c407458002C6183](https://etherscan.io/address/0x9A0aBA393aac4dFbFf4333B06c407458002C6183)
 - ACoconutBTC: [0xAcf806FeAeD6455244D34590AE57F772e80AA1a8](https://etherscan.io/address/0xAcf806FeAeD6455244D34590AE57F772e80AA1a8)
 - Controller: [0xFA25316494560fbEc71F147aDCD6BE34C7aB7AE5](https://etherscan.io/address/0xFA25316494560fbEc71F147aDCD6BE34C7aB7AE5)
-- ACoconutVault: [0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45](https://etherscan.io/address/0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45)
+- ACoconutVault
+  - acBTC Vault: [0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45](https://etherscan.io/address/0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45)
+  - UNI-ETH-AC Vault: [0xF2c6706af78d15549c9376d04E40957A3B357de4](https://etherscan.io/address/0xf2c6706af78d15549c9376d04e40957a3b357de4)
 - StrategyCurveRenBTC: [0x73D6df4395CD54DF2E07fD3880c1B47Aeb2Aed97](https://etherscan.io/address/0x73D6df4395CD54DF2E07fD3880c1B47Aeb2Aed97)
 - AccountFactory: [0x34d50B679Bb74a3d4D27A82594e527Aea78ec548](https://etherscan.io/address/0x34d50B679Bb74a3d4D27A82594e527Aea78ec548)
 - StakingApplication: [0xc34a8AfBbC912feB57881CD033825E9a199CF6Bf](https://etherscan.io/address/0xc34a8AfBbC912feB57881CD033825E9a199CF6Bf)
