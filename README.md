@@ -28,12 +28,11 @@ For the remaining smart contracts, their audit will complete within 7 days and t
 - [**Account**](./contracts/account/Account.sol): User-owned smart contract accounts.
 - [**AccountFactory**](./contracts/account/AccountFactory.sol): Factory to create new smart contract account.
 
-**Libraries**
-- **Vault**
-  - [**Controller**](./contracts/libraries/vaults/Controller.sol): Controls reward distributions to rewarded vaults.
-  - [**Vault**](./contracts/libraries/vaults/Vault.sol): YEarn's style vault that collect assets to earn yield.
-  - [**RewardedVault**](./contracts/libraries/vaults/RewardedVault.sol): A vault that can distribute rewards for a seperate reward token.
-  - [**StrategyCurveRenBTC**](./contracts/libraries/vaults/StrategyCurveRenBTC.sol): An earning strategy for Curve.fi's renCrv vault.
+**Vault**
+- [**Controller**](./contracts/libraries/vaults/Controller.sol): Controls reward distributions to rewarded vaults.
+- [**Vault**](./contracts/libraries/vaults/Vault.sol): YEarn's style vault that collect assets to earn yield.
+- [**RewardedVault**](./contracts/libraries/vaults/RewardedVault.sol): A vault that can distribute rewards for a seperate reward token.
+- [**StrategyCurveRenBTC**](./contracts/libraries/vaults/StrategyCurveRenBTC.sol): An earning strategy for Curve.fi's renCrv vault.
   
 ## Deployments
 - ACoconut: [0x9A0aBA393aac4dFbFf4333B06c407458002C6183](https://etherscan.io/address/0x9A0aBA393aac4dFbFf4333B06c407458002C6183)
