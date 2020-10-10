@@ -3,9 +3,13 @@
 Welcome to ACoconut BTC/acBTC! ACoconut BTC is a synthetic ERC20 BTC token backed by a basket of ERC20 BTC tokens. It’s built on top of Curve’s StableSwap algorithm and it's integrated with saving and swap applications. For more information about acBTC, please check our [docs](https://docs.acbtc.fi/) or visit our [DApp](https://app.acbtc.fi/).
 
 ## Audits
-All smart contracts, except [**ACoconutExchange**](./contracts/acoconut/ACoconutExchange.sol) and [**CurveRenCrvMigrator**](./contracts/acoconut/CurveRenCrvMigrator.sol), have been reviewed thoroughly by [Secbit Labs](https://secbit.io/). The complete audit report will be online soon.
+### Phase 1
+All smart contracts, except [**ACoconutExchange**](./contracts/acoconut/ACoconutExchange.sol) and [**CurveRenCrvMigrator**](./contracts/acoconut/CurveRenCrvMigrator.sol), have been reviewed thoroughly by [Secbit Labs](https://secbit.io/).
+ - [Phase 1 Audit Report(EN)](./audits/acBTC_Phase_One_Report_EN.pdf)
+ - [Phase 1 Audit Report(CN)](./audits/acBTC_Phase_One_Report_CN.pdf)
 
-For these two smart contracts, their audit will complete within 7 days and they will go live shortly after. Since the Big Blind Pool lasts for 14 days, and these two contracts are not needed until migration, our users have substantial time to review the final contracts as well as their audit reports before the migration happens.
+### Phase 2
+For the remaining smart contracts, their audit will complete within 7 days and they will go live shortly after. Since the Big Blind Pool lasts for 14 days, and these two contracts are not needed until migration, our users have substantial time to review the final contracts as well as their audit reports before the migration happens.
 
 ## Contracts
 
@@ -32,16 +36,6 @@ For these two smart contracts, their audit will complete within 7 days and they 
   - [**StrategyCurveRenBTC**](./contracts/libraries/vaults/StrategyCurveRenBTC.sol): An earning strategy for Curve.fi's renCrv vault.
   
 ## Deployments
-### Beta Environment
-- ACoconut: [0xD104F7479117209c1B885390500f29110f84E8FB](https://etherscan.io/address/0xD104F7479117209c1B885390500f29110f84E8FB)
-- ACoconutBTC: [0x3644B1464Cc0ADb73AcC936dc6C4d5dDE42D108b](https://etherscan.io/address/0x3644B1464Cc0ADb73AcC936dc6C4d5dDE42D108b)
-- Controller: [0x9003b72161870A49F2e12C9cC161527aea9133d7](https://etherscan.io/address/0x9003b72161870A49F2e12C9cC161527aea9133d7)
-- ACoconutVault: [0xbDB15b5E88698c2DCfb6bFB7eb65fDEA36238055](https://etherscan.io/address/0xbDB15b5E88698c2DCfb6bFB7eb65fDEA36238055)
-- StrategyCurveRenBTC: [0x3c5900C18Ee4d054149f49238138c806488449d2](https://etherscan.io/address/0x3c5900C18Ee4d054149f49238138c806488449d2)
-- AccountFactory: [0x7583a7a3852f742bBC66855F3502f1c512a0aD6E](https://etherscan.io/address/0x7583a7a3852f742bBC66855F3502f1c512a0aD6E)
-- StakingApplication: [0x66386885C7fb8B81126c58C3F5Ea533fC472139e](https://etherscan.io/address/0x66386885C7fb8B81126c58C3F5Ea533fC472139e)
-
-### Prod Environment
 - ACoconut: [0x9A0aBA393aac4dFbFf4333B06c407458002C6183](https://etherscan.io/address/0x9A0aBA393aac4dFbFf4333B06c407458002C6183)
 - ACoconutBTC: [0xAcf806FeAeD6455244D34590AE57F772e80AA1a8](https://etherscan.io/address/0xAcf806FeAeD6455244D34590AE57F772e80AA1a8)
 - Controller: [0xFA25316494560fbEc71F147aDCD6BE34C7aB7AE5](https://etherscan.io/address/0xFA25316494560fbEc71F147aDCD6BE34C7aB7AE5)
