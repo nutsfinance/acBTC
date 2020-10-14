@@ -7,11 +7,12 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../account/Account.sol";
 import "../account/AccountFactory.sol";
 import "../libraries/vaults/Controller.sol";
+import "../libraries/upgradeability/Initializable.sol";
 
 /**
  * @dev Application to help stake and get rewards.
  */
-contract StakingApplication {
+contract StakingApplication is Initializable {
     using SafeMath for uint256;
 
     event Staked(address indexed staker, uint256 indexed vaultId, address indexed token, uint256 amount);
@@ -22,7 +23,10 @@ contract StakingApplication {
     address public accountFactory;
     Controller public controller;
 
-    constructor(address _accountFactory, address _controller) public {
+    /**
+     * @dev Initializes Account Factory and Controller.
+     */
+    function initialize(address _accountFactory, address _controller) public initializer {
         require(_accountFactory != address(0x0), "account factory not set");
         require(_controller != address(0x0), "controller not set");
         
@@ -159,11 +163,12 @@ contract StakingApplication {
     /**
      * @dev Retrieves the amount of token staked in RewardedVault.
      * @param _vaultId ID of the vault to unstake.
+     * @param _user Address of the user to check balance.
      */
-    function getStakeBalance(uint256 _vaultId) public view returns (uint256) {
+    function getStakeBalance(uint256 _vaultId, address _user) public view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).accounts(msg.sender);
+        address account = AccountFactory(accountFactory).accounts(_user);
         require(account != address(0x0), "no account");
 
         RewardedVault vault = RewardedVault(_vault);
@@ -188,11 +193,12 @@ contract StakingApplication {
     /**
      * @dev Return the amount of unclaim rewards.
      * @param _vaultId ID of the vault to unstake.
+     * @param _user Address of the user to check balance.
      */
-    function getUnclaimedReward(uint256 _vaultId) public view returns (uint256) {
+    function getUnclaimedReward(uint256 _vaultId, address _user) public view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).accounts(msg.sender);
+        address account = AccountFactory(accountFactory).accounts(_user);
         require(account != address(0x0), "no account");
 
         return RewardedVault(_vault).earned(account);
@@ -201,11 +207,12 @@ contract StakingApplication {
     /**
      * @dev Return the amount of claim rewards.
      * @param _vaultId ID of the vault to unstake.
+     * @param _user Address of the user to check balance.
      */
-    function getClaimedReward(uint256 _vaultId) public view returns (uint256) {
+    function getClaimedReward(uint256 _vaultId, address _user) public view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).accounts(msg.sender);
+        address account = AccountFactory(accountFactory).accounts(_user);
         require(account != address(0x0), "no account");
         
         return RewardedVault(_vault).claims(account);

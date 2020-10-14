@@ -31,7 +31,8 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
         aCoconutVault = await ACoconutVault.new("ACoconut BTC Vault Token", "acBTCv", controller.address, renCrv.address, migrationDue);
         const account = await Account.new();
         accountFactory = await AccountFactory.new(account.address);
-        stakingApplication = await StakingApplication.new(accountFactory.address, controller.address);
+        stakingApplication = await StakingApplication.new();
+        await stakingApplication.initialize(accountFactory.address, controller.address);
     });
     it("should initialize parameters", async () => {
         assert.strictEqual(await stakingApplication.governance(), owner);
@@ -65,13 +66,13 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
         await stakingApplication.stake(0, 800, {from: user1});
         assert.strictEqual((await renCrv.balanceOf(account)).toNumber(), 1200);
         assert.strictEqual((await aCoconutVault.balanceOf(account)).toNumber(), 800);
-        assert.strictEqual((await stakingApplication.getStakeBalance(0, {from: user1})).toNumber(), 800);
+        assert.strictEqual((await stakingApplication.getStakeBalance(0, user1)).toNumber(), 800);
         assert.strictEqual((await stakingApplication.getVaultBalance(0)).toNumber(), 800);
 
         await stakingApplication.unstake(0, 300, {from: user1});
         assert.strictEqual((await renCrv.balanceOf(account)).toNumber(), 1500);
         assert.strictEqual((await aCoconutVault.balanceOf(account)).toNumber(), 500);
-        assert.strictEqual((await stakingApplication.getStakeBalance(0, {from: user1})).toNumber(), 500);
+        assert.strictEqual((await stakingApplication.getStakeBalance(0, user1)).toNumber(), 500);
         assert.strictEqual((await stakingApplication.getVaultBalance(0)).toNumber(), 500);
     });
     it("should be able to get rewards", async () => {
@@ -82,7 +83,7 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
         assert.strictEqual((await renCrv.balanceOf(account)).toNumber(), 2000);
 
         await stakingApplication.stake(0, 800, {from: user1});
-        assert.strictEqual((await stakingApplication.getUnclaimedReward(0, {from: user1})).toNumber(), 0);
+        assert.strictEqual((await stakingApplication.getUnclaimedReward(0, user1)).toNumber(), 0);
         await aCoconut.mint(owner, web3.utils.toWei('40000'));
         await aCoconut.approve(aCoconutVault.address, web3.utils.toWei('40000'));
         await controller.addRewards(0, web3.utils.toWei('40000'));
@@ -90,11 +91,11 @@ contract('StakingApplication', async ([owner, user1, user2]) => {
         // After 7 days, user1 should get all the rewards!
         assert.strictEqual((await aCoconut.balanceOf(account)).toNumber(), 0);
         await time.increase(3600 * 24 * 8);
-        assertAlmostEqual(await stakingApplication.getUnclaimedReward(0, {from: user1}), web3.utils.toWei('40000'));
-        assert.strictEqual((await stakingApplication.getClaimedReward(0, {from: user1})).toNumber(), 0);
+        assertAlmostEqual(await stakingApplication.getUnclaimedReward(0, user1), web3.utils.toWei('40000'));
+        assert.strictEqual((await stakingApplication.getClaimedReward(0, user1)).toNumber(), 0);
         await stakingApplication.claimRewards(0, {from: user1});
-        assert.strictEqual((await stakingApplication.getUnclaimedReward(0, {from: user1})).toNumber(), 0);
-        assertAlmostEqual(await stakingApplication.getClaimedReward(0, {from: user1}), web3.utils.toWei('40000'));
+        assert.strictEqual((await stakingApplication.getUnclaimedReward(0, user1)).toNumber(), 0);
+        assertAlmostEqual(await stakingApplication.getClaimedReward(0, user1), web3.utils.toWei('40000'));
         assertAlmostEqual(await aCoconut.balanceOf(account), web3.utils.toWei('40000'));
     });
 });
