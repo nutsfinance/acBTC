@@ -15,23 +15,21 @@ import "../libraries/upgradeability/Initializable.sol";
 contract StakingApplication is Initializable {
     using SafeMath for uint256;
 
-    event Staked(address indexed staker, uint256 indexed vaultId, address indexed token, uint256 amount);
-    event Unstaked(address indexed staker, uint256 indexed vaultId, address indexed token, uint256 amount);
-    event Claimed(address indexed staker, uint256 indexed vaultId, address indexed token, uint256 amount);
+    event Staked(address indexed account, uint256 indexed vaultId, address token, uint256 amount);
+    event Unstaked(address indexed account, uint256 indexed vaultId, address token, uint256 amount);
+    event Claimed(address indexed account, uint256 indexed vaultId, address token, uint256 amount);
+    event Exited(address indexed account, uint256 indexed vaultId);
 
     address public governance;
-    address public accountFactory;
     Controller public controller;
 
     /**
-     * @dev Initializes Account Factory and Controller.
+     * @dev Initializes staking application.
      */
-    function initialize(address _accountFactory, address _controller) public initializer {
-        require(_accountFactory != address(0x0), "account factory not set");
+    function initialize(address _controller) public initializer {
         require(_controller != address(0x0), "controller not set");
         
         governance = msg.sender;
-        accountFactory = _accountFactory;
         controller = Controller(_controller);
     }
 
@@ -41,16 +39,6 @@ contract StakingApplication is Initializable {
     function setGovernance(address _governance) public {
         require(msg.sender == governance, "not governance");
         governance = _governance;
-    }
-
-    /**
-     * @dev Updates the account factory.
-     */
-    function setAccountFactory(address _accountFactory) public {
-        require(msg.sender == governance, "not governance");
-        require(_accountFactory != address(0x0), "account factory not set");
-
-        accountFactory = _accountFactory;
     }
 
     /**
@@ -64,28 +52,21 @@ contract StakingApplication is Initializable {
     }
 
     /**
-     * @dev Retrieve the active account of the user.
-     */
-    function _getAccount() internal view returns (Account) {
-        address _account = AccountFactory(accountFactory).accounts(msg.sender);
-        require(_account != address(0x0), "no account");
-        Account account = Account(payable(_account));
-        require(account.isOperator(address(this)), "not operator");
-
-        return account;
-    }
-
-    /**
      * @dev Stake token into rewarded vault.
+     * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to stake.
      * @param _amount Amount of token to stake.
+     * @param _claimRewards Whether to claim rewards at the same time.
      */
-    function stake(uint256 _vaultId, uint256 _amount) public {
+    function stake(address _account, uint256 _vaultId, uint256 _amount, bool _claimRewards) public {
+        Account account = Account(payable(_account));
+        require(account.owner() == msg.sender, "not owner");
+        require(account.isOperator(address(this)), "not operator");
+
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
         require(_amount > 0, "zero amount");
 
-        Account account = _getAccount();
         RewardedVault vault = RewardedVault(_vault);
         IERC20 token = vault.token();
         account.approveToken(address(token), address(vault), _amount);
@@ -93,20 +74,29 @@ contract StakingApplication is Initializable {
         bytes memory methodData = abi.encodeWithSignature("deposit(uint256)", _amount);
         account.invoke(address(vault), 0, methodData);
 
-        emit Staked(msg.sender, _vaultId, address(token), _amount);
+        emit Staked(_account, _vaultId, address(token), _amount);
+
+        if (_claimRewards) {
+            claimRewards(_account, _vaultId);
+        }
     }
 
     /**
      * @dev Unstake token out of RewardedVault.
+     * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to unstake.
      * @param _amount Amount of token to unstake.
+     * @param _claimRewards Whether to claim rewards at the same time.
      */
-    function unstake(uint256 _vaultId, uint256 _amount) public {
+    function unstake(address _account, uint256 _vaultId, uint256 _amount, bool _claimRewards) public {
+        Account account = Account(payable(_account));
+        require(account.owner() == msg.sender, "not owner");
+        require(account.isOperator(address(this)), "not operator");
+
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
         require(_amount > 0, "zero amount");
 
-        Account account = _getAccount();
         RewardedVault vault = RewardedVault(_vault);
         IERC20 token = vault.token();
 
@@ -117,66 +107,54 @@ contract StakingApplication is Initializable {
         bytes memory methodData = abi.encodeWithSignature("withdraw(uint256)", shares);
         account.invoke(address(vault), 0, methodData);
 
-        emit Unstaked(msg.sender, _vaultId, address(token), _amount);
+        emit Unstaked(_account, _vaultId, address(token), _amount);
+
+        if (_claimRewards) {
+            claimRewards(_account, _vaultId);
+        }
     }
 
     /**
-     * @dev Unstake all token out of RewardedVault.
+     * @dev Exit the vault and claims all rewards.
+     * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to unstake.
      */
-    function unstakeAll(uint256 _vaultId) public {
+    function exit(address _account, uint256 _vaultId) public {
+        Account account = Account(payable(_account));
+        require(account.owner() == msg.sender, "not owner");
+        require(account.isOperator(address(this)), "not operator");
+
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
 
-        Account account = _getAccount();
         RewardedVault vault = RewardedVault(_vault);
-        IERC20 token = vault.token();
 
-        uint256 totalBalance = vault.balance();
-        uint256 totalSupply = vault.totalSupply();
-        uint256 shares = vault.balanceOf(address(account));
-        uint256 amount = shares.mul(totalBalance).div(totalSupply);
-        bytes memory methodData = abi.encodeWithSignature("withdraw(uint256)", shares);
+        bytes memory methodData = abi.encodeWithSignature("exit()");
         account.invoke(address(vault), 0, methodData);
 
-        emit Unstaked(msg.sender, _vaultId, address(token), amount);
+        emit Exited(_account, _vaultId);
     }
 
     /**
      * @dev Claims rewards from RewardedVault.
+     * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to unstake.
      */
-    function claimRewards(uint256 _vaultId) public {
+    function claimRewards(address _account, uint256 _vaultId) public {
+        Account account = Account(payable(_account));
+        require(account.owner() == msg.sender, "not owner");
+        require(account.isOperator(address(this)), "not operator");
+
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
 
-        Account account = _getAccount();
         RewardedVault vault = RewardedVault(_vault);
         IERC20 rewardToken = IERC20(controller.rewardToken());
         bytes memory methodData = abi.encodeWithSignature("claimReward()");
         bytes memory methodResult = account.invoke(address(vault), 0, methodData);
         uint256 claimAmount = abi.decode(methodResult, (uint256));
 
-        emit Claimed(msg.sender, _vaultId, address(rewardToken), claimAmount);
-    }
-
-    /**
-     * @dev Retrieves the amount of token staked in RewardedVault.
-     * @param _vaultId ID of the vault to unstake.
-     * @param _user Address of the user to check balance.
-     */
-    function getStakeBalance(uint256 _vaultId, address _user) public view returns (uint256) {
-        address _vault = controller.vaults(_vaultId);
-        require(_vault != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).accounts(_user);
-        require(account != address(0x0), "no account");
-
-        RewardedVault vault = RewardedVault(_vault);
-        uint256 totalBalance = vault.balance();
-        uint256 totalSupply = vault.totalSupply();
-        uint256 share = vault.balanceOf(account);
-
-        return totalBalance.mul(share).div(totalSupply);
+        emit Claimed(_account, _vaultId, address(rewardToken), claimAmount);
     }
 
     /**
@@ -191,30 +169,43 @@ contract StakingApplication is Initializable {
     }
 
     /**
-     * @dev Return the amount of unclaim rewards.
+     * @dev Retrieves the amount of token staked in RewardedVault.
+     * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to unstake.
-     * @param _user Address of the user to check balance.
      */
-    function getUnclaimedReward(uint256 _vaultId, address _user) public view returns (uint256) {
+    function getStakeBalance(address _account, uint256 _vaultId) public view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).accounts(_user);
-        require(account != address(0x0), "no account");
 
-        return RewardedVault(_vault).earned(account);
+        RewardedVault vault = RewardedVault(_vault);
+        uint256 totalBalance = vault.balance();
+        uint256 totalSupply = vault.totalSupply();
+        uint256 share = vault.balanceOf(_account);
+
+        return totalBalance.mul(share).div(totalSupply);
+    }
+
+    /**
+     * @dev Return the amount of unclaim rewards.
+     * @param _account The account address used to stake.
+     * @param _vaultId ID of the vault to unstake.
+     */
+    function getUnclaimedReward(address _account, uint256 _vaultId) public view returns (uint256) {
+        address _vault = controller.vaults(_vaultId);
+        require(_vault != address(0x0), "no vault");
+
+        return RewardedVault(_vault).earned(_account);
     }
 
     /**
      * @dev Return the amount of claim rewards.
+     * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to unstake.
-     * @param _user Address of the user to check balance.
      */
-    function getClaimedReward(uint256 _vaultId, address _user) public view returns (uint256) {
+    function getClaimedReward(address _account, uint256 _vaultId) public view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
-        address account = AccountFactory(accountFactory).accounts(_user);
-        require(account != address(0x0), "no account");
         
-        return RewardedVault(_vault).claims(account);
+        return RewardedVault(_vault).claims(_account);
     }
 }
