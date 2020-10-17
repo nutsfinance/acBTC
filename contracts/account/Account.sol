@@ -176,7 +176,9 @@ contract Account is Initializable {
      */
     function approveToken(address tokenAddress, address targetAddress, uint256 amount) public onlyOperator {
         IERC20(tokenAddress).safeApprove(targetAddress, 0);
-        IERC20(tokenAddress).safeApprove(targetAddress, amount);
+        if (amount > 0) {
+            IERC20(tokenAddress).safeApprove(targetAddress, amount);
+        }
         emit Approved(tokenAddress, targetAddress, amount);
     }
 

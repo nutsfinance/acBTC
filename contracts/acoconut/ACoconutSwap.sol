@@ -249,7 +249,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
      * @param _dx Unconverted amount of token _i to swap in.
      * @return Unconverted amount of token _j to swap out.
      */
-    function getExchangeAmount(uint256 _i, uint256 _j, uint256 _dx) external view returns (uint256) {
+    function getSwapAmount(uint256 _i, uint256 _j, uint256 _dx) external view returns (uint256) {
         uint256[] memory _balances = balances;
         require(_i != _j, "same token");
         require(_i < _balances.length, "invalid in");

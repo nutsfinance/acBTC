@@ -192,7 +192,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         
         await renbtc.mint(user2, '800000000');
         await renbtc.approve(swap.address, '800000000');
-        const exchangeAmount = await swap.getExchangeAmount(1, 0, '800000000');
+        const exchangeAmount = await swap.getSwapAmount(1, 0, '800000000');
         const exchangeTotal = exchangeAmount.mul(new BN(FEE_DENOMITOR)).div(new BN(FEE_DENOMITOR).sub(new BN(SWAP_FEE)));
 
         // Before exchange, we have 105 WBTC and 85 renBTC
@@ -210,7 +210,7 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         await renbtc.mint(user2, '800000000');
         await renbtc.approve(swap.address, '800000000', {from: user2});
         // 8 renBTC
-        const exchangeAmount = await swap.getExchangeAmount(1, 0, '800000000');
+        const exchangeAmount = await swap.getSwapAmount(1, 0, '800000000');
         const exchangeTotal = exchangeAmount.mul(new BN(FEE_DENOMITOR)).div(new BN(FEE_DENOMITOR).sub(new BN(SWAP_FEE)));
 
         assert.strictEqual((await wbtc.balanceOf(user2)).toString(), '0');
