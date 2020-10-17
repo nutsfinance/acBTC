@@ -1,4 +1,4 @@
-const { expectRevert } = require('@openzeppelin/test-helpers');
+const { expectRevert, BN } = require('@openzeppelin/test-helpers');
 const Account = artifacts.require("Account");
 const assert = require('assert');
 const MockToken = artifacts.require("MockWBTC");
@@ -61,15 +61,15 @@ contract("Account", async ([deployer, owner, user, user2, admin1, admin2, admin3
         await expectRevert(account.revokeOperator(user, {from: user2}), "not admin");
     });
     it("should allow to withdraw ETH by operator", async () => {
-        await account.send(100000000000000000);  // 0.1 ETH
+        await account.send('100000000000000000');  // 0.1 ETH
         await account.grantOperator(user, {from: admin1});
         const prevBalance = await web3.eth.getBalance(user2);
         await account.withdraw(user2, "100000000000000000", {from: user});
         const currBalance = await web3.eth.getBalance(user2);
-        assert.strictEqual(currBalance - prevBalance, 100000000000000000);
+        assert.strictEqual(new BN(currBalance).sub(new BN(prevBalance)).toString(), '100000000000000000');
     });
     it("should not allow to withdraw ETH other than operator", async () => {
-        await account.send(100000000000000000);  // 0.1 ETH
+        await account.send('100000000000000000');  // 0.1 ETH
         await expectRevert(account.withdraw(user2, "100000000000000000", {from: user}), "not operator");
     });
     it("should allow to withdraw ERC20 by operator", async () => {
