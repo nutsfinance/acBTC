@@ -96,14 +96,15 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
     function _getD(uint256[] memory _balances, uint256 _A) internal pure returns (uint256) {
         uint256 sum = 0;
         uint256 i = 0;
+        uint256 Ann = _A;
         for (i = 0; i < _balances.length; i++) {
             sum = sum.add(_balances[i]);
+            Ann = Ann.mul(_balances.length);
         }
         if (sum == 0)   return 0;
 
         uint256 prevD = 0;
         uint256 D = sum;
-        uint256 Ann = _A * _balances.length;
         for (i = 0; i < 255; i++) {
             uint256 pD = D;
             for (uint256 j = 0; j < _balances.length; j++) {
@@ -134,9 +135,10 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
     function _getY(uint256[] memory _balances, uint256 _j, uint256 _D, uint256 _A) internal pure returns (uint256) {
         uint256 c = _D;
         uint256 S_ = 0;
-        uint256 Ann = _A * _balances.length;
+        uint256 Ann = _A;
         uint256 i = 0;
         for (i = 0; i < _balances.length; i++) {
+            Ann = Ann.mul(_balances.length);
             if (i == _j) continue;
             S_ = S_.add(_balances[i]);
             // c = c * D / (_x * N)
