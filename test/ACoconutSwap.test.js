@@ -47,8 +47,9 @@ contract('ACoconutSwap', async ([owner, admin, feeRecipient, user, user2]) => {
         renbtc = await RenBTC.new();
         acbtc = await ACoconutBTC.new();
         await swap.initialize([wbtc.address, renbtc.address], [PRECISION, PRECISION],
-            [MINT_FEE, SWAP_FEE, REDEEM_FEE], acbtc.address, feeRecipient, 100);
+            [MINT_FEE, SWAP_FEE, REDEEM_FEE], acbtc.address, 100);
         await acbtc.setMinter(swap.address, true);
+        await swap.setFeeRecipient(feeRecipient);
     });
     it("should initialize paramters", async () => {
         assert.strictEqual(await swap.tokens(0), wbtc.address);
