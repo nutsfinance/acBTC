@@ -25,11 +25,7 @@ contract('ACoconutBTC', async ([owner, minter1, minter2, user1, user2]) => {
         await aCoconutBTC.setMinter(minter1, true);
         await aCoconutBTC.mint(user1, 1000, {from: minter1});
         assert.strictEqual((await aCoconutBTC.balanceOf(user1)).toNumber(), 1000);
-        await aCoconutBTC.burn(user1, 200, {from: minter1});
+        await aCoconutBTC.burn(200, {from: user1});
         assert.strictEqual((await aCoconutBTC.balanceOf(user1)).toNumber(), 800);
-    });
-    it("should not allow to mint or burn other than minters", async () => {
-        await expectRevert(aCoconutBTC.mint(user1, 1000, {from: minter1}), "not minter");
-        await expectRevert(aCoconutBTC.burn(user1, 200, {from: minter1}), "not minter");
     });
 });

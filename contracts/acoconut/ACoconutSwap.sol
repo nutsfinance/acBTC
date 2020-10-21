@@ -381,7 +381,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
 
         totalSupply = D.sub(_amount);
         // After reducing the redeem fee, the remaining pool tokens are burned!
-        IERC20MintableBurnable(poolToken).burn(msg.sender, _amount);
+        IERC20MintableBurnable(poolToken).burnFrom(msg.sender, _amount);
 
         emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
     }
@@ -451,7 +451,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         IERC20(tokens[_i]).safeTransfer(msg.sender, dy);
 
         totalSupply = D.sub(_amount);
-        IERC20MintableBurnable(poolToken).burn(msg.sender, _amount);
+        IERC20MintableBurnable(poolToken).burnFrom(msg.sender, _amount);
 
         emit Redeemed(msg.sender, _amount.add(feeAmount), amounts, feeAmount);
     }
@@ -522,7 +522,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         balances = _balances;
         uint256 burnAmount = redeemAmount.sub(feeAmount);
         totalSupply = oldD.sub(burnAmount);
-        IERC20MintableBurnable(poolToken).burn(msg.sender, burnAmount);
+        IERC20MintableBurnable(poolToken).burnFrom(msg.sender, burnAmount);
         for (i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0)   continue;
             IERC20(tokens[i]).safeTransfer(msg.sender, _amounts[i]);

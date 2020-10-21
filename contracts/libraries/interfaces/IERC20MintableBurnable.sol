@@ -8,5 +8,7 @@ import "./IERC20Mintable.sol";
  */
 interface IERC20MintableBurnable is IERC20Mintable {
     
-    function burn(address _user, uint256 _amount) external;
+    function burn(uint256 _amount) external;
+
+    function burnFrom(address _user, uint256 _amount) external;
 }
