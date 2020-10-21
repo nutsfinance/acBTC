@@ -64,6 +64,7 @@ contract SwapApplication is Initializable {
         ACoconutSwap _swap = swap;
         // We don't perform input validations here as they are done in ACoconutSwap.
         for (uint256 i = 0; i < _amounts.length; i++) {
+            if (_amounts[i] == 0)   continue;
             account.approveToken(_swap.tokens(i), address(_swap), _amounts[i]);
         }
 
