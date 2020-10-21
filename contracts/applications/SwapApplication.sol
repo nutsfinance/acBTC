@@ -21,7 +21,7 @@ contract SwapApplication is Initializable {
     /**
      * @dev Initializes swap application.
      */
-    function initialize(address _swap) public initializer {
+    function initialize(address _swap) external initializer {
         require(_swap != address(0x0), "swap not set");
         
         governance = msg.sender;
@@ -31,7 +31,7 @@ contract SwapApplication is Initializable {
     /**
      * @dev Updates the govenance address.
      */
-    function setGovernance(address _governance) public {
+    function setGovernance(address _governance) external {
         require(msg.sender == governance, "not governance");
         governance = _governance;
     }
@@ -39,7 +39,7 @@ contract SwapApplication is Initializable {
     /**
      * @dev Updates the swap address.
      */
-    function setSwap(address _swap) public {
+    function setSwap(address _swap) external {
         require(msg.sender == governance, "not governance");
         require(_swap != address(0x0), "swap not set");
 
@@ -59,7 +59,7 @@ contract SwapApplication is Initializable {
      * @param _amounts Unconverted token balances used to mint pool token.
      * @param _minMintAmount Minimum amount of pool token to mint.
      */
-    function mintToken(address _account, uint256[] memory _amounts, uint256 _minMintAmount) public validAccount(_account) {
+    function mintToken(address _account, uint256[] calldata _amounts, uint256 _minMintAmount) external validAccount(_account) {
         Account account = Account(payable(_account));
         // We don't perform input validations here as they are done in ACoconutSwap.
         for (uint256 i = 0; i < _amounts.length; i++) {
@@ -79,7 +79,7 @@ contract SwapApplication is Initializable {
      * @param _dx Unconverted amount of token _i to swap in.
      * @param _minDy Minimum token _j to swap out in converted balance.
      */
-    function swapToken(address _account, uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) public validAccount(_account) {
+    function swapToken(address _account, uint256 _i, uint256 _j, uint256 _dx, uint256 _minDy) external validAccount(_account) {
         Account account = Account(payable(_account));
         // We don't perform input validations here as they are done in ACoconutSwap.
         account.approveToken(swap.tokens(_i), address(swap), _dx);
@@ -94,7 +94,7 @@ contract SwapApplication is Initializable {
      * @param _amount Amount of pool token to redeem.
      * @param _minRedeemAmounts Minimum amount of underlying tokens to get.
      */
-    function redeemProportion(address _account, uint256 _amount, uint256[] memory _minRedeemAmounts) public validAccount(_account) {
+    function redeemProportion(address _account, uint256 _amount, uint256[] calldata _minRedeemAmounts) external validAccount(_account) {
         Account account = Account(payable(_account));
         // We don't perform input validations here as they are done in ACoconutSwap.
         account.approveToken(swap.poolToken(), address(swap), _amount);
@@ -110,7 +110,7 @@ contract SwapApplication is Initializable {
      * @param _i Index of the token to redeem to.
      * @param _minRedeemAmount Minimum amount of the underlying token to redeem to.
      */
-    function redeemSingle(address _account, uint256 _amount, uint256 _i, uint256 _minRedeemAmount) public validAccount(_account) {
+    function redeemSingle(address _account, uint256 _amount, uint256 _i, uint256 _minRedeemAmount) external validAccount(_account) {
         Account account = Account(payable(_account));
         // We don't perform input validations here as they are done in ACoconutSwap.
         account.approveToken(swap.poolToken(), address(swap), _amount);
@@ -125,7 +125,7 @@ contract SwapApplication is Initializable {
      * @param _amounts Amounts of underlying tokens to redeem to.
      * @param _maxRedeemAmount Maximum of pool token to redeem.
      */
-    function redeemMulti(address _account, uint256[] memory _amounts, uint256 _maxRedeemAmount) public validAccount(_account) {
+    function redeemMulti(address _account, uint256[] calldata _amounts, uint256 _maxRedeemAmount) external validAccount(_account) {
         Account account = Account(payable(_account));
         // We don't perform input validations here as they are done in ACoconutSwap.
         // The amount of acBTC to burn is unknown yet. Simply set the allowance to the maximum redeem amount.

@@ -26,7 +26,7 @@ contract StakingApplication is Initializable {
     /**
      * @dev Initializes staking application.
      */
-    function initialize(address _controller) public initializer {
+    function initialize(address _controller) external initializer {
         require(_controller != address(0x0), "controller not set");
         
         governance = msg.sender;
@@ -36,7 +36,7 @@ contract StakingApplication is Initializable {
     /**
      * @dev Updates the govenance address.
      */
-    function setGovernance(address _governance) public {
+    function setGovernance(address _governance) external {
         require(msg.sender == governance, "not governance");
         governance = _governance;
     }
@@ -44,7 +44,7 @@ contract StakingApplication is Initializable {
     /**
      * @dev Updates the controller address.
      */
-    function setController(address _controller) public {
+    function setController(address _controller) external {
         require(msg.sender == governance, "not governance");
         require(_controller != address(0x0), "controller not set");
 
@@ -65,7 +65,7 @@ contract StakingApplication is Initializable {
      * @param _amount Amount of token to stake.
      * @param _claimRewards Whether to claim rewards at the same time.
      */
-    function stake(address _account, uint256 _vaultId, uint256 _amount, bool _claimRewards) public validAccount(_account) {
+    function stake(address _account, uint256 _vaultId, uint256 _amount, bool _claimRewards) external validAccount(_account) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
         require(_amount > 0, "zero amount");
@@ -92,7 +92,7 @@ contract StakingApplication is Initializable {
      * @param _amount Amount of token to unstake.
      * @param _claimRewards Whether to claim rewards at the same time.
      */
-    function unstake(address _account, uint256 _vaultId, uint256 _amount, bool _claimRewards) public validAccount(_account) {
+    function unstake(address _account, uint256 _vaultId, uint256 _amount, bool _claimRewards) external validAccount(_account) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
         require(_amount > 0, "zero amount");
@@ -120,7 +120,7 @@ contract StakingApplication is Initializable {
      * @param _account The account address used to exit.
      * @param _vaultId ID of the vault to unstake.
      */
-    function exit(address _account, uint256 _vaultId) public validAccount(_account) {
+    function exit(address _account, uint256 _vaultId) external validAccount(_account) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
 
@@ -155,7 +155,7 @@ contract StakingApplication is Initializable {
     /**
      * @dev Returns the total balance of the vault.
      */
-    function getVaultBalance(uint256 _vaultId) public view returns (uint256) {
+    function getVaultBalance(uint256 _vaultId) external view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
 
@@ -168,7 +168,7 @@ contract StakingApplication is Initializable {
      * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to unstake.
      */
-    function getStakeBalance(address _account, uint256 _vaultId) public view returns (uint256) {
+    function getStakeBalance(address _account, uint256 _vaultId) external view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
 
@@ -185,7 +185,7 @@ contract StakingApplication is Initializable {
      * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to unstake.
      */
-    function getUnclaimedReward(address _account, uint256 _vaultId) public view returns (uint256) {
+    function getUnclaimedReward(address _account, uint256 _vaultId) external view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
 
@@ -197,7 +197,7 @@ contract StakingApplication is Initializable {
      * @param _account The account address used to stake.
      * @param _vaultId ID of the vault to unstake.
      */
-    function getClaimedReward(address _account, uint256 _vaultId) public view returns (uint256) {
+    function getClaimedReward(address _account, uint256 _vaultId) external view returns (uint256) {
         address _vault = controller.vaults(_vaultId);
         require(_vault != address(0x0), "no vault");
         
