@@ -407,7 +407,8 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         }
         // The pool token amount becomes D - _amount
         uint256 y = _getY(_balances, _i, D.sub(_amount), A);
-        uint256 dy = _balances[_i].sub(y).div(precisions[_i]);
+        // dy = (balance[i] - y - 1) / precisions[i] in case there was rounding errors
+        uint256 dy = _balances[_i].sub(y).sub(1).div(precisions[_i]);
 
         return (dy, feeAmount);
     }
@@ -440,7 +441,8 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         // y is converted(18 decimals)
         uint256 y = _getY(_balances, _i, D.sub(_amount), A);
         // dy is not converted
-        uint256 dy = _balances[_i].sub(y).div(precisions[_i]);
+        // dy = (balance[i] - y - 1) / precisions[i] in case there was rounding errors
+        uint256 dy = _balances[_i].sub(y).sub(1).div(precisions[_i]);
         require(dy >= _minRedeemAmount, "fewer than expected");
         // Updates token balance in storage
         balances[_i] = y;
