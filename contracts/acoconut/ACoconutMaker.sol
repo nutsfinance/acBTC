@@ -14,9 +14,9 @@ contract ACoconutMaker {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    address public constant acBtc = address(0xAcf806FeAeD6455244D34590AE57F772e80AA1a8);
+    address public constant acBtc = address(0xeF6e45af9a422c5469928F927ca04ed332322e2e);
     address public constant acBtcVault = address(0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45);
-    address public constant acSwap = address(0);    // To add after ACoconutSwap is deployed.
+    address public constant acSwap = address(0x73FddFb941c11d16C827169Bb94aCC227841C396);   // ACoconut Swap (proxy)
 
     address public governance;
     address public strategist;

@@ -64,8 +64,8 @@ module.exports = {
     main: {
       provider: () => new HDWalletProvider(process.env.MNENOMIC, "https://mainnet.infura.io/v3/" + process.env.INFURA_API_KEY, 0, 10),
       network_id: 1,          // Main's id
-      gas: 3500000,           // Gas sent with each transaction (default: ~5000000)
-      gasPrice: 90000000000,  // 75 gwei (in wei) (default: 100 gwei)
+      gas: 6700000,           // Gas sent with each transaction (default: ~5000000)
+      gasPrice: 25000000000,  // 75 gwei (in wei) (default: 100 gwei)
     },
 
     // Another network with more advanced options...

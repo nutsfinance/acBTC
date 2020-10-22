@@ -12,10 +12,10 @@ contract CurveRenCrvMigrator is IMigrator {
     using SafeERC20 for IERC20;
 
     address public constant override want = address(0x49849C98ae39Fff122806C06791Fa73784FB3675); // renCrv token
-    address public constant override get = address(0xAcf806FeAeD6455244D34590AE57F772e80AA1a8);  // acBTC
+    address public constant override get = address(0xeF6e45af9a422c5469928F927ca04ed332322e2e);  // acBTC
     address public constant wbtc = address(0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599);    // WBTC token
     address public constant renbtc = address(0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D);  // renBTC token
-    address public constant acSwap = address(0); // To be added after ACoconutSwap is deployed
+    address public constant acSwap = address(0x73FddFb941c11d16C827169Bb94aCC227841C396); // ACoconutSwap (proxy)
     address public constant acVault = address(0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45);    // acBTC vault
     address public constant curve = address(0x93054188d876f558f4a66B2EF1d97d16eDf0895B); // REN swap
 
