@@ -9,20 +9,22 @@ All smart contracts, except [**ACoconutExchange**](./contracts/acoconut/ACoconut
  - [Phase 1 Audit Report(CN)](./audits/acBTC_Phase_One_Report_CN.pdf)
 
 ### Phase 2
-For the remaining smart contracts, their audit will complete within 7 days and they will go live shortly after. Since the Big Blind Pool lasts for 14 days, and these two contracts are not needed until migration, our users have substantial time to review the final contracts as well as their audit reports before the migration happens.
+All smart contracts have been reviewed by thoroughly by [Secbit Labs](https://secbit.io/). The complete audit report should be available soon.
 
 ## Contracts
 
 **ACoconut**
 - [**ACoconut**](./contracts/acoconut/ACoconut.sol): ACoconut goverance token.
 - [**ACoconutBTC**](./contracts/acoconut/ACoconutBTC.sol): ACoconut BTC which is a synthetic BTC ERC20 token backed by a basket of BTC ERC20 tokens.
-- [**ACoconutExchange**](./contracts/acoconut/ACoconutExchange.sol): An BTC ERC20 token exchange that bootstraps the value of ACoconutBTC.
-- [**ACoconutExchangeProxy**](./contracts/acoconut/ACoconutExchangeProxy.sol): Proxy for ACoconutExchangeProxy
+- [**ACoconutSwap**](./contracts/acoconut/ACoconutSwap.sol): An BTC ERC20 token exchange that bootstraps the value of ACoconutBTC.
+- [**ACoconutSwapProxy**](./contracts/acoconut/ACoconutSwapProxy.sol): Proxy for ACoconutExchangeProxy
+- [**ACoconutMaker**](./contracts/acoconut/ACoconutMaker.sol): ACoconutSwap fee collector and distributor.
 - [**ACoconutVault**](./contracts/acoconut/ACoconutVault.sol): Vault that earns yield as well as helping migration into ACoconutExchange.
 - [**CurveRenCrvMigrator**](./contracts/acoconut/CurveRenCrvMigrator.sol): Migrates Curve.fi's RenCrv into ACoconutExchange.
 
 **Application**
 - [**StakingApplication**](./contracts/applications/StakingApplication.sol): Application that helps staking and claiming rewards.
+- [**SwapApplication**](./contracts/applications/SwapApplication.sol): Application that helps mint, redeem and swap acBTC.
 
 **Account**
 - [**Account**](./contracts/account/Account.sol): User-owned smart contract accounts.
@@ -36,7 +38,9 @@ For the remaining smart contracts, their audit will complete within 7 days and t
   
 ## Deployments
 - ACoconut: [0x9A0aBA393aac4dFbFf4333B06c407458002C6183](https://etherscan.io/address/0x9A0aBA393aac4dFbFf4333B06c407458002C6183)
-- ACoconutBTC: [0xAcf806FeAeD6455244D34590AE57F772e80AA1a8](https://etherscan.io/address/0xAcf806FeAeD6455244D34590AE57F772e80AA1a8)
+- ACoconutBTC: [0xeF6e45af9a422c5469928F927ca04ed332322e2e](https://etherscan.io/address/0xeF6e45af9a422c5469928F927ca04ed332322e2e)
+- ACoconutSwap(Proxy): [0x73FddFb941c11d16C827169Bb94aCC227841C396](https://etherscan.io/address/0x73FddFb941c11d16C827169Bb94aCC227841C396)
+- ACoconutMaker: [0xc96c05babfe2a4e7ce2657f4131e3d8ea2854bcc](https://etherscan.io/address/0xc96c05babfe2a4e7ce2657f4131e3d8ea2854bcc)
 - Controller: [0xFA25316494560fbEc71F147aDCD6BE34C7aB7AE5](https://etherscan.io/address/0xFA25316494560fbEc71F147aDCD6BE34C7aB7AE5)
 - ACoconutVault
   - acBTC Vault: [0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45](https://etherscan.io/address/0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45)
@@ -44,3 +48,4 @@ For the remaining smart contracts, their audit will complete within 7 days and t
 - StrategyCurveRenBTC: [0x73D6df4395CD54DF2E07fD3880c1B47Aeb2Aed97](https://etherscan.io/address/0x73D6df4395CD54DF2E07fD3880c1B47Aeb2Aed97)
 - AccountFactory: [0x34d50B679Bb74a3d4D27A82594e527Aea78ec548](https://etherscan.io/address/0x34d50B679Bb74a3d4D27A82594e527Aea78ec548)
 - StakingApplication: [0xc34a8AfBbC912feB57881CD033825E9a199CF6Bf](https://etherscan.io/address/0xc34a8AfBbC912feB57881CD033825E9a199CF6Bf)
+- SwapApplication: [0x4cfFc147F4E5d6227D3adBa93bBa7d8bba124bA5](https://etherscan.io/address/0x4cfFc147F4E5d6227D3adBa93bBa7d8bba124bA5)
