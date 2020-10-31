@@ -14,6 +14,8 @@ contract ACoconutMaker {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
+    event FeeCollected(address indexed token, uint256 feeAmount, uint256 feeRewarded, uint256 feeReserved);
+
     address public constant acBtc = address(0xeF6e45af9a422c5469928F927ca04ed332322e2e);
     address public constant acBtcVault = address(0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45);
     address public constant acSwap = address(0x73FddFb941c11d16C827169Bb94aCC227841C396);   // ACoconut Swap (proxy)
@@ -73,14 +75,16 @@ contract ACoconutMaker {
     function allocateFees() public {
         require(msg.sender == strategist || msg.sender == governance, "not authorized");
         uint256 balance = IERC20(acBtc).balanceOf(address(this));
+        uint256 reserveAmount = 0;
 
         if (balance > 0 && reserveRate > 0 && reserve != address(0x0)) {
-            uint256 reserveAmount = balance.mul(reserveRate).div(reserveRateMax);
+            reserveAmount = balance.mul(reserveRate).div(reserveRateMax);
             IERC20(acBtc).safeTransfer(reserve, reserveAmount);
             balance = balance.sub(reserveAmount);
         }
 
         IERC20(acBtc).safeTransfer(acBtcVault, balance);
+        emit FeeCollected(acBtc, balance.add(reserveAmount), balance, reserveAmount);
     }
     
     /**
