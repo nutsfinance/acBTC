@@ -9,7 +9,9 @@ All smart contracts, except [**ACoconutExchange**](./contracts/acoconut/ACoconut
  - [Phase 1 Audit Report(CN)](./audits/acBTC_Phase_One_Report_CN.pdf)
 
 ### Phase 2
-All smart contracts have been reviewed by thoroughly by [Secbit Labs](https://secbit.io/). The complete audit report should be available soon.
+All smart contracts have been reviewed by thoroughly by [Secbit Labs](https://secbit.io/). 
+ - [Phase 2 Audit Report(EN)](./audits/acBTC_Phase_Two_Report_EN.pdf)
+ - [Phase 2 Audit Report(CN)](./audits/acBTC_Phase_Two_Report_CN.pdf)
 
 ## Contracts
 
