@@ -51,4 +51,4 @@ All smart contracts have been reviewed by thoroughly by [Secbit Labs](https://se
 - AccountFactory: [0x34d50B679Bb74a3d4D27A82594e527Aea78ec548](https://etherscan.io/address/0x34d50B679Bb74a3d4D27A82594e527Aea78ec548)
 - StakingApplication: [0xc34a8AfBbC912feB57881CD033825E9a199CF6Bf](https://etherscan.io/address/0xc34a8AfBbC912feB57881CD033825E9a199CF6Bf)
 - SwapApplication: [0x4cfFc147F4E5d6227D3adBa93bBa7d8bba124bA5](https://etherscan.io/address/0x4cfFc147F4E5d6227D3adBa93bBa7d8bba124bA5)
-- Timelock: [0x7CC852Ed19ee9472489fCa82DE8df0fe331AAfCc](https://etherscan.io/address/0x7CC852Ed19ee9472489fCa82DE8df0fe331AAfCc)
+- Timelock: [xeD4907815Ff134A50B50f73090f293f22F1FD51e](https://etherscan.io/address/xeD4907815Ff134A50B50f73090f293f22F1FD51e)
