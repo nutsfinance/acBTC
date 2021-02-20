@@ -16,20 +16,24 @@ contract ACoconutMaker {
 
     event FeeCollected(address indexed token, uint256 feeAmount, uint256 feeRewarded, uint256 feeReserved);
 
-    address public constant acBtc = address(0xeF6e45af9a422c5469928F927ca04ed332322e2e);
-    address public constant acBtcVault = address(0x1eB47C01cfAb26D2346B449975b7BF20a34e0d45);
-    address public constant acSwap = address(0x73FddFb941c11d16C827169Bb94aCC227841C396);   // ACoconut Swap (proxy)
-
     address public governance;
-    address public strategist;
 
+    address public acBtc;
+    address public acBtcVault;
+    address public acSwap;
     address public reserve;
     uint256 public reserveRate = 0;
     uint256 public constant reserveRateMax = 10000;
 
-    constructor() public {
+    constructor(address _acBtc, address _acBtcVault, address _acSwap) public {
+        require(_acBtc != address(0x0), "acBTC not set");
+        require(_acBtcVault != address(0x0), "acBTC vault not set");
+        require(_acSwap != address(0x0), "acSwap not set");
+
+        acBtc = _acBtc;
+        acBtcVault = _acBtcVault;
+        acSwap = _acSwap;
         governance = msg.sender;
-        strategist = msg.sender;
         reserve = msg.sender;
     }
 
@@ -39,14 +43,6 @@ contract ACoconutMaker {
     function setGovernance(address _governance) external {
         require(msg.sender == governance, "not governance");
         governance = _governance;
-    }
-
-    /**
-     * @dev Updates the strategist address.
-     */
-    function setStrategist(address _strategist) public {
-        require(msg.sender == governance, "not governance");
-        strategist = _strategist;
     }
 
     /**
@@ -73,7 +69,7 @@ contract ACoconutMaker {
      * @dev Allocates swap fees accured in the contract.
      */
     function allocateFees() public {
-        require(msg.sender == strategist || msg.sender == governance, "not authorized");
+        require(msg.sender == governance, "not governance");
         uint256 balance = IERC20(acBtc).balanceOf(address(this));
         uint256 reserveAmount = 0;
 
@@ -92,7 +88,7 @@ contract ACoconutMaker {
      * This contract must be an admin of ACoconut Swap in order to proceed.
      */
     function collectFees() public {
-        require(msg.sender == strategist || msg.sender == governance, "not authorized");
+        require(msg.sender == governance, "not governance");
         ACoconutSwap(acSwap).collectFee();
         allocateFees();
     }
@@ -103,7 +99,7 @@ contract ACoconutMaker {
      * @param _amount Amount of token to salvage.
      */
     function salvage(address _tokenAddress, uint256 _amount) public {
-        require(msg.sender == strategist || msg.sender == governance, "not authorized");
+        require(msg.sender == governance, "not governance");
         require(_tokenAddress != acBtc, "cannot salvage");
         require(_amount > 0, "zero amount");
         IERC20(_tokenAddress).safeTransfer(governance, _amount);

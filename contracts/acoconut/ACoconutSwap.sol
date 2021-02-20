@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "../libraries/upgradeability/Initializable.sol";
-import "../libraries/interfaces/IERC20MintableBurnable.sol";
+import "../upgradeability/Initializable.sol";
+import "../interfaces/IERC20MintableBurnable.sol";
 
 /**
  * @notice ACoconut swap.

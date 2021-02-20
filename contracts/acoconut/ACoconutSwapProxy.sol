@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.8;
 
-import "../libraries/upgradeability/AdminUpgradeabilityProxy.sol";
+import "../upgradeability/AdminUpgradeabilityProxy.sol";
 
 /**
  * @notice Proxy for ACoconutSwap to help truffle deployment.
