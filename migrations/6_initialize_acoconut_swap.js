@@ -5,6 +5,8 @@ const MockRenBTC = artifacts.require("MockRenBTC");
 const ACoconutBTC = artifacts.require("ACoconutBTC");
 const ACoconut = artifacts.require("ACoconut");
 
+const DEPLOYER = '0x2932516D9564CB799DDA2c16559caD5b8357a0D6';
+
 const initializeACoconutSwap = async (deployer, accounts) => {
     // TODO Change to real address in production
     // const wBTC = await deployer.deploy(MockWBTC);
@@ -14,6 +16,7 @@ const initializeACoconutSwap = async (deployer, accounts) => {
     const acBTC = await ACoconutBTC.deployed();
     const ac = await ACoconut.deployed();
 
+    // console.log(accounts);
     // TODO Change to a real address later
     const aCoconutSwapProxy = await ACoconutSwapProxy.deployed();
     const aCoconutSwap = await ACoconutSwap.at(aCoconutSwapProxy.address);
@@ -22,8 +25,8 @@ const initializeACoconutSwap = async (deployer, accounts) => {
 
     await acBTC.setMinter(aCoconutSwapProxy.address, true);
     await aCoconutSwap.unpause();
-    await wBTC.mint(accounts[0], '1000000000');
-    await renBTC.mint(accounts[0], '1000000000');
+    await wBTC.mint(DEPLOYER, '1000000000');
+    await renBTC.mint(DEPLOYER, '1000000000');
     await wBTC.approve(aCoconutSwap.address, '1000000000');
     await renBTC.approve(aCoconutSwap.address, '1000000000');
     await aCoconutSwap.mint(['1000000000', '1000000000'], '2000000000');
