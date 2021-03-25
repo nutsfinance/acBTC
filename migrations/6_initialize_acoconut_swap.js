@@ -21,7 +21,7 @@ const initializeACoconutSwap = async (deployer, accounts) => {
     const aCoconutSwapProxy = await ACoconutSwapProxy.deployed();
     const aCoconutSwap = await ACoconutSwap.at(aCoconutSwapProxy.address);
 
-    await aCoconutSwap.initialize([wBTC.address, renBTC.address], [1, 1], [0, 0, 0], acBTC.address, 100);
+    await aCoconutSwap.initialize([wBTC.address, renBTC.address], ['10000000000', '10000000000'], [0, 0, 0], acBTC.address, 100);
 
     await acBTC.setMinter(aCoconutSwapProxy.address, true);
     await aCoconutSwap.unpause();
