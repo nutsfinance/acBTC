@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.8;
+pragma solidity 0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Capped.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
 /**
  * @dev ACoconut token.
@@ -10,14 +11,16 @@ import "@openzeppelin/contracts/token/ERC20/ERC20Capped.sol";
  * https://github.com/yam-finance/yam-protocol/blob/master/contracts/token/YAMGovernanceStorage.sol
  * https://github.com/yam-finance/yam-protocol/blob/master/contracts/token/YAMGovernance.sol
  */
-contract ACoconut is ERC20Capped {
+contract ACoconut is ERC20CappedUpgradeable {
+    using SafeMathUpgradeable for uint256;
+
     event MinterUpdated(address indexed account, bool allowed);
     
     address public governance;
     mapping(address => bool) public minters;
 
     /// @notice A record of each accounts delegate
-    mapping (address => address) internal _delegates;
+    mapping (address => address) public delegates;
 
     /// @notice A checkpoint for marking number of votes from a given block
     struct Checkpoint {
@@ -46,7 +49,12 @@ contract ACoconut is ERC20Capped {
     /// @notice An event thats emitted when a delegate account's vote balance changes
     event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, uint256 newBalance);
 
-    constructor() public ERC20("ACoconut", "AC") ERC20Capped(21000000 * 10 ** 18) {
+    /**
+     * @dev Initializes ACoconut token.
+     */
+    function initialize() public initializer {
+        __ERC20_init("ACoconut", "AC");
+        __ERC20Capped_init(21000000 * 10 ** 18);
         governance = msg.sender;
     }
 
@@ -78,7 +86,7 @@ contract ACoconut is ERC20Capped {
     function mint(address _user, uint256 _amount) public {
         require(minters[msg.sender], "not minter");
         _mint(_user, _amount);
-        _moveDelegates(address(0), _delegates[_user], _amount);
+        _moveDelegates(address(0), delegates[_user], _amount);
     }
 
     /**
@@ -87,7 +95,7 @@ contract ACoconut is ERC20Capped {
      */
     function burn(uint256 _amount) public {
         _burn(msg.sender, _amount);
-        _moveDelegates(_delegates[msg.sender], address(0), _amount);
+        _moveDelegates(delegates[msg.sender], address(0), _amount);
     }
 
     /**
@@ -97,7 +105,7 @@ contract ACoconut is ERC20Capped {
      */
     function transfer(address _recipient, uint256 _amount) public override returns (bool) {
         super.transfer(_recipient, _amount);
-        _moveDelegates(_delegates[msg.sender], _delegates[_recipient], _amount);
+        _moveDelegates(delegates[msg.sender], delegates[_recipient], _amount);
         return true;
     }
 
@@ -109,20 +117,8 @@ contract ACoconut is ERC20Capped {
      */
     function transferFrom(address _sender, address _recipient, uint256 _amount) public override returns (bool) {
         super.transferFrom(_sender, _recipient, _amount);
-        _moveDelegates(_delegates[_sender], _delegates[_recipient], _amount);
+        _moveDelegates(delegates[_sender], delegates[_recipient], _amount);
         return true;
-    }
-
-    /**
-     * @notice Delegate votes from `msg.sender` to `delegatee`
-     * @param delegator The address to get delegatee for
-     */
-    function delegates(address delegator)
-        external
-        view
-        returns (address)
-    {
-        return _delegates[delegator];
     }
 
    /**
@@ -181,7 +177,7 @@ contract ACoconut is ERC20Capped {
         address signatory = ecrecover(digest, v, r, s);
         require(signatory != address(0), "delegateBySig: invalid signature");
         require(nonce == nonces[signatory]++, "delegateBySig: invalid nonce");
-        require(now <= expiry, "delegateBySig: signature expired");
+        require(block.timestamp <= expiry, "delegateBySig: signature expired");
         return _delegate(signatory, delegatee);
     }
 
@@ -247,9 +243,9 @@ contract ACoconut is ERC20Capped {
     function _delegate(address delegator, address delegatee)
         internal
     {
-        address currentDelegate = _delegates[delegator];
+        address currentDelegate = delegates[delegator];
         uint256 delegatorBalance = balanceOf(delegator);
-        _delegates[delegator] = delegatee;
+        delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
@@ -301,7 +297,7 @@ contract ACoconut is ERC20Capped {
         return uint32(n);
     }
 
-    function getChainId() internal pure returns (uint256) {
+    function getChainId() internal view returns (uint256) {
         uint256 chainId;
         assembly { chainId := chainid() }
         return chainId;

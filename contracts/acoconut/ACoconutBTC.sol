@@ -1,21 +1,25 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.8;
+pragma solidity 0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 
 /**
  * @notice ACoconut BTC token. Only ACoconutSwap could mint ACoconut BTC.
  * Please note that burning ACoconut BTC does not release its underlying assets.
  * Users should call ACoconutSwap to do that.
  */
-contract ACoconutBTC is ERC20Burnable {
+contract ACoconutBTC is ERC20BurnableUpgradeable {
     event MinterUpdated(address indexed account, bool allowed);
     
     address public governance;
     mapping(address => bool) public minters;
 
-    constructor() public ERC20("ACoconut BTC", "acBTC") {
+    /**
+     * @dev Initializes acBTC contract.
+     */
+    function initialize() public initializer {
+        __ERC20_init("ACoconut BTC", "acBTC");
         governance = msg.sender;
     }
 

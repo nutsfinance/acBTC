@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.8;
-
-import "./IERC20Mintable.sol";
+pragma solidity 0.8.0;
 
 /**
  * @notice Interface for ERC20 token which supports mint and burn.
  */
-interface IERC20MintableBurnable is IERC20Mintable {
+interface IERC20MintableBurnable {
+
+    function mint(address _user, uint256 _amount) external;
     
     function burn(uint256 _amount) external;
 

@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.8;
+pragma solidity 0.8.0;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import "../upgradeability/Initializable.sol";
-import "../interfaces/IERC20MintableBurnable.sol";
+import "../misc/IERC20MintableBurnable.sol";
 
 /**
  * @notice ACoconut swap.
  */
-contract ACoconutSwap is Initializable, ReentrancyGuard {
-    using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+contract ACoconutSwap is Initializable, ReentrancyGuardUpgradeable {
+    using SafeMathUpgradeable for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /**
      * @dev Token swapped between two underlying tokens.
@@ -54,7 +54,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
     /**
      * @dev Initialize the ACoconut Swap.
      */
-    function initialize(address[] memory _tokens, uint256[] memory _precisions, uint256[] memory _fees,
+    function initialize(address[] memory _tokens, uint256[] memory _precisions, uint256[] memory _fees, address _feeRecipient,
         address _poolToken, uint256 _A) public initializer {
         require(_tokens.length == _precisions.length, "input mismatch");
         require(_fees.length == 3, "no fees");
@@ -64,9 +64,12 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             balances.push(0);
         }
         require(_poolToken != address(0x0), "pool token not set");
+        require(_feeRecipient != address(0x0), "fee recipient not set");
+
+        __ReentrancyGuard_init();
 
         governance = msg.sender;
-        feeRecipient = msg.sender;
+        feeRecipient = _feeRecipient;
         tokens = _tokens;
         precisions = _precisions;
         mintFee = _fees[0];
@@ -234,7 +237,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             if (_amounts[i] == 0)    continue;
             // Update the balance in storage
             balances[i] = _balances[i];
-            IERC20(tokens[i]).safeTransferFrom(msg.sender, address(this), _amounts[i]);
+            IERC20Upgradeable(tokens[i]).safeTransferFrom(msg.sender, address(this), _amounts[i]);
         }
         totalSupply = newD;
         IERC20MintableBurnable(poolToken).mint(feeRecipient, feeAmount);
@@ -305,13 +308,13 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         }
         require(dy >= _minDy, "fewer than expected");
 
-        IERC20(tokens[_i]).safeTransferFrom(msg.sender, address(this), _dx);
+        IERC20Upgradeable(tokens[_i]).safeTransferFrom(msg.sender, address(this), _dx);
         // Important: When swap fee > 0, the swap fee is charged on the output token.
         // Therefore, balances[j] < tokens[j].balanceOf(this)
         // Since balances[j] is used to compute D, D is unchanged.
         // collectFees() is used to convert the difference between balances[j] and tokens[j].balanceOf(this)
         // into pool token as fees!
-        IERC20(tokens[_j]).safeTransfer(msg.sender, dy);
+        IERC20Upgradeable(tokens[_j]).safeTransfer(msg.sender, dy);
 
         emit TokenSwapped(msg.sender, tokens[_i], tokens[_j], _dx, dy);
     }
@@ -363,7 +366,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             feeAmount = _amount.mul(fee).div(feeDenominator);
             // Redemption fee is paid with pool token
             // No conversion is needed as the pool token has 18 decimals
-            IERC20(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
+            IERC20Upgradeable(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
             _amount = _amount.sub(feeAmount);
         }
 
@@ -376,7 +379,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             require(amounts[i] >= _minRedeemAmounts[i], "fewer than expected");
             // Updates the balance in storage
             balances[i] = _balances[i].sub(tokenAmount);
-            IERC20(tokens[i]).safeTransfer(msg.sender, amounts[i]);
+            IERC20Upgradeable(tokens[i]).safeTransfer(msg.sender, amounts[i]);
         }
 
         totalSupply = D.sub(_amount);
@@ -434,7 +437,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             // Redemption fee is charged with pool token before redemption.
             feeAmount = _amount.mul(fee).div(feeDenominator);
             // No conversion is needed as the pool token has 18 decimals
-            IERC20(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
+            IERC20Upgradeable(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
             _amount = _amount.sub(feeAmount);
         }
 
@@ -448,7 +451,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         balances[_i] = y;
         uint256[] memory amounts = new uint256[](_balances.length);
         amounts[_i] = dy;
-        IERC20(tokens[_i]).safeTransfer(msg.sender, dy);
+        IERC20Upgradeable(tokens[_i]).safeTransfer(msg.sender, dy);
 
         totalSupply = D.sub(_amount);
         IERC20MintableBurnable(poolToken).burnFrom(msg.sender, _amount);
@@ -514,7 +517,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
             redeemAmount = redeemAmount.mul(feeDenominator).div(feeDenominator.sub(fee));
             feeAmount = redeemAmount.sub(oldD.sub(newD));
             // No conversion is needed as the pool token has 18 decimals
-            IERC20(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
+            IERC20Upgradeable(poolToken).safeTransferFrom(msg.sender, feeRecipient, feeAmount);
         }
         require(redeemAmount <= _maxRedeemAmount, "more than expected");
 
@@ -525,7 +528,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         IERC20MintableBurnable(poolToken).burnFrom(msg.sender, burnAmount);
         for (i = 0; i < _balances.length; i++) {
             if (_amounts[i] == 0)   continue;
-            IERC20(tokens[i]).safeTransfer(msg.sender, _amounts[i]);
+            IERC20Upgradeable(tokens[i]).safeTransfer(msg.sender, _amounts[i]);
         }
 
         emit Redeemed(msg.sender, redeemAmount, _amounts, feeAmount);
@@ -540,7 +543,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         uint256 oldD = totalSupply;
 
         for (uint256 i = 0; i < _balances.length; i++) {
-            _balances[i] = IERC20(tokens[i]).balanceOf(address(this)).mul(precisions[i]);
+            _balances[i] = IERC20Upgradeable(tokens[i]).balanceOf(address(this)).mul(precisions[i]);
         }
         uint256 newD = _getD(_balances, A);
 
@@ -557,7 +560,7 @@ contract ACoconutSwap is Initializable, ReentrancyGuard {
         uint256 oldD = totalSupply;
 
         for (uint256 i = 0; i < _balances.length; i++) {
-            _balances[i] = IERC20(tokens[i]).balanceOf(address(this)).mul(precisions[i]);
+            _balances[i] = IERC20Upgradeable(tokens[i]).balanceOf(address(this)).mul(precisions[i]);
         }
         uint256 newD = _getD(_balances, A);
         uint256 feeAmount = newD.sub(oldD);

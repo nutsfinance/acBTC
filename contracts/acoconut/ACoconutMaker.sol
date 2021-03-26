@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.8;
+pragma solidity 0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /**
  * @title acBTCx token contract. Collects and distributes acBTC income
@@ -12,25 +13,40 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
  * 
  * Credit: https://github.com/acBTCswap/acBTCswap/blob/master/contracts/acBTCBar.sol
  */
-contract ACoconutMaker is ERC20("ACoconut Maker", "acBTCx"){
-    using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+contract ACoconutMaker is ERC20Upgradeable, ReentrancyGuardUpgradeable {
+    using SafeMathUpgradeable for uint256;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     event Minted(address indexed account, uint256 share, uint256 amount);
     event Redeemed(address indexed account, uint256 share, uint256 amount);
 
-    IERC20 public acBTC;
+    uint256 public constant WAD = 10**18;
+    IERC20Upgradeable public acBTC;
 
-    // Define the acBTC token contract
-    constructor(IERC20 _acBTC) public {
+    /**
+     * @dev Initializes acBTCx contract.
+     */
+    function initialize(IERC20Upgradeable _acBTC) public initializer {
+        __ERC20_init("ACoconut Maker", "acBTCx");
+        __ReentrancyGuard_init();
         acBTC = _acBTC;
+    }
+
+    /**
+     * @dev Returns the amount of acBTC for each acBTCx.
+     */
+    function exchangeRate() public view returns (uint256) {
+        uint256 _totalAmount = acBTC.balanceOf(address(this));
+        uint256 _totalShare = totalSupply();
+
+        return _totalShare == 0 ? WAD : _totalAmount.mul(WAD).div(_totalShare);
     }
 
     /**
      * @dev Mints acBTCx with acBTC.
      * @param _amount Amount of acBTC used to mint acBTCx.
      */
-    function mint(uint256 _amount) public {
+    function mint(uint256 _amount) public nonReentrant {
         uint256 _totalAmount = acBTC.balanceOf(address(this));
         uint256 _totalShare = totalSupply();
 
@@ -51,7 +67,7 @@ contract ACoconutMaker is ERC20("ACoconut Maker", "acBTCx"){
      * @dev Redeems acBTCx to acBTC.
      * @param _share Amount of acBTCx to redeem.
      */
-    function redeem(uint256 _share) public {
+    function redeem(uint256 _share) public nonReentrant {
         uint256 _totalAmount = acBTC.balanceOf(address(this));
         uint256 _totalShare = totalSupply();
         uint256 _amount = _share.mul(_totalAmount).div(_totalShare);
