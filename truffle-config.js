@@ -38,7 +38,8 @@ module.exports = {
    */
 
   api_keys: {
-    etherscan: process.env.ETHERSCAN_KEY
+    etherscan: process.env.ETHERSCAN_KEY,
+    bscscan: process.env.BSCSCAN_KEY
   },
 
   networks: {
@@ -66,6 +67,14 @@ module.exports = {
       network_id: 1,          // Main's id
       gas: 6700000,           // Gas sent with each transaction (default: ~5000000)
       gasPrice: 25000000000,  // 75 gwei (in wei) (default: 100 gwei)
+    },
+
+    bsc: {
+      provider: () => new HDWalletProvider(process.env.MNENOMIC, `https://bsc-dataseed1.binance.org`, 0, 10),
+      network_id: 56,
+      gas: 6700000,           // Gas sent with each transaction (default: ~6700000)
+      gasPrice: 10000000000,  // 10 gwei (in wei) (default: 10 gwei)
+      // confirmations: 10,
     },
 
     // Another network with more advanced options...
